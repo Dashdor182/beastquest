@@ -1,8 +1,7 @@
 import {
   LS_KEYS, books, owned, read,
   collapsedSeries, collapsedSagas,
-  saveJSON, seriesKey,
-  expandAllSeriesInSaga, collapseAllSeriesInSaga
+  saveJSON, seriesKey, allSeriesKeysFromBooks
 } from './state.js';
 
 const elResults = () => document.getElementById('results');
@@ -30,9 +29,35 @@ export function escapeHtml(str){
 }
 const uniq = (arr)=> [...new Set(arr)];
 
+/* ---------- Collapse helpers (exported for global controls) ---------- */
+export function setAllSagasCollapsed(collapsed){
+  const all = new Set(books.map(b=>b.saga));
+  collapsedSagas.clear();
+  if (collapsed) for (const s of all) collapsedSagas.add(s);
+  saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
+}
+
+export function setAllSeriesCollapsed(collapsed){
+  const all = allSeriesKeysFromBooks(books);
+  collapsedSeries.clear();
+  if (collapsed) for (const k of all) collapsedSeries.add(k);
+  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+}
+
+export function setSagaSeriesCollapsed(saga, collapsed){
+  const keys = books.filter(b=>b.saga===saga).map(b=>seriesKey(b.saga, b.series));
+  let changed = false;
+  for (const k of keys){
+    if (collapsed && !collapsedSeries.has(k)){ collapsedSeries.add(k); changed = true; }
+    if (!collapsed && collapsedSeries.has(k)){ collapsedSeries.delete(k); changed = true; }
+  }
+  if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+}
+
+/* ---------- Filtering & grouping ---------- */
 export function applyFilters(list) {
   const q  = elSearch()?.value?.trim().toLowerCase() || '';
-  const fs = elSaga()?.value; const fr = elSeries()?.value; const st = elStatus()?.value || 'all';
+  const fs = elSaga()?.value; const fr = elSeries()?.value; const st = elStatus()?.value;
   return list.filter(b => {
     if (q && !b.title.toLowerCase().includes(q)) return false;
     if (fs && b.saga !== fs) return false;
@@ -89,7 +114,7 @@ export function renderFiltersOptions() {
       return a.localeCompare(b);
     });
 
-  if (elSaga())   elSaga().innerHTML   = '<option value="">All sagas</option>' + sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+  if (elSaga())   elSaga().innerHTML = '<option value="">All sagas</option>' + sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
   if (elSeries()) elSeries().innerHTML = '<option value="">All series</option>' + seriesNames.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
 }
 
@@ -110,6 +135,7 @@ function inferSeriesNumberFromItems(items){
   return Number.isFinite(best) ? best : null;
 }
 
+/* ---------- Render Overview (with sticky saga headers & big click targets) ---------- */
 export function render(onAfterCardHook){
   const filtered = applyFilters(books);
   const container = elResults();
@@ -127,17 +153,17 @@ export function render(onAfterCardHook){
     const sagaSection = document.createElement('section');
     sagaSection.className = 'panel rounded-xl border brand-border shadow-sm';
 
-    // Header (sticky within viewport)
+    // Header
     const sagaBodyId = 'sbody-' + btoa(unescape(encodeURIComponent(String(saga)))).replace(/[^a-z0-9]/gi,'');
     const isSagaCollapsed = collapsedSagas.has(saga);
 
     sagaSection.innerHTML = `
-      <div class="px-4 py-3 rounded-t-xl header-grad sticky-saga" data-saga-header>
-        <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="px-4 py-3 rounded-t-xl header-grad saga-sticky">
+        <div class="flex items-center justify-between gap-3">
           <h2 class="text-xl sm:text-2xl font-bold">Saga: ${escapeHtml(saga)}</h2>
-          <div class="flex items-center gap-2">
-            <button type="button" class="btn btn-ghost" data-saga-expand-series>Expand series</button>
-            <button type="button" class="btn btn-ghost" data-saga-collapse-series>Collapse series</button>
+          <div class="flex items-center gap-2 text-xs">
+            <button type="button" class="btn" data-saga-expand-series>Expand series</button>
+            <button type="button" class="btn" data-saga-collapse-series>Collapse series</button>
           </div>
           <button type="button" aria-expanded="${!isSagaCollapsed}" aria-controls="${sagaBodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-saga-toggle>
             <span class="text-sm">${isSagaCollapsed ? 'Expand' : 'Collapse'}</span>
@@ -148,23 +174,15 @@ export function render(onAfterCardHook){
       <div class="p-4" id="${sagaBodyId}"></div>
     `;
 
-    const sagaHeader = sagaSection.querySelector('[data-saga-header]');
     const sagaBody = sagaSection.querySelector('#' + sagaBodyId);
     const sagaToggleBtn = sagaSection.querySelector('[data-saga-toggle]');
-    const expandSeriesBtn = sagaSection.querySelector('[data-saga-expand-series]');
-    const collapseSeriesBtn = sagaSection.querySelector('[data-saga-collapse-series]');
+    const btnExpandSeries = sagaSection.querySelector('[data-saga-expand-series]');
+    const btnCollapseSeries = sagaSection.querySelector('[data-saga-collapse-series]');
 
     if (isSagaCollapsed){
       sagaBody.classList.add('hidden');
       sagaToggleBtn.querySelector('svg').style.transform = 'rotate(-180deg)';
     }
-
-    // Entire saga header toggles collapse (except clicking the series expand/collapse buttons)
-    sagaHeader.addEventListener('click', (e)=>{
-      if (e.target.closest('[data-saga-expand-series], [data-saga-collapse-series], button[data-toggle]')) return;
-      sagaToggleBtn.click();
-    });
-
     sagaToggleBtn.addEventListener('click', (e)=>{
       e.stopPropagation();
       const hidden = sagaBody.classList.toggle('hidden');
@@ -175,11 +193,10 @@ export function render(onAfterCardHook){
       saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
     });
 
-    // Per-saga expand/collapse all series
-    expandSeriesBtn.addEventListener('click', (e)=>{ e.stopPropagation(); expandAllSeriesInSaga(saga); render(onAfterCardHook); });
-    collapseSeriesBtn.addEventListener('click', (e)=>{ e.stopPropagation(); collapseAllSeriesInSaga(saga); render(onAfterCardHook); });
+    btnExpandSeries.addEventListener('click', (e)=>{ e.stopPropagation(); setSagaSeriesCollapsed(saga, false); render(onAfterCardHook); });
+    btnCollapseSeries.addEventListener('click', (e)=>{ e.stopPropagation(); setSagaSeriesCollapsed(saga, true);  render(onAfterCardHook); });
 
-    // Add all series inside saga body (each series remains independently collapsible)
+    // Add all series inside saga body (each series independently collapsible)
     for (const [series, items] of seriesMap){
       const node = tplSeries().content.cloneNode(true);
       const header = node.querySelector('[data-series-header]');
@@ -195,35 +212,24 @@ export function render(onAfterCardHook){
         : `Series: ${escapeHtml(series)}`;
 
       header.innerHTML = `
-        <div class="rounded-t-xl px-4 py-2 header-grad">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">${niceSeriesTitle}</h3>
-            <button type="button" aria-expanded="${!collapsed}" aria-controls="${bodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-toggle>
-              <span class="text-sm">${collapsed ? 'Expand' : 'Collapse'}</span>
-              <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-          </div>
+        <div class="rounded-t-xl px-4 py-2 header-grad flex items-center justify-between">
+          <h3 class="text-lg font-semibold">${niceSeriesTitle}</h3>
+          <span class="muted text-sm">${collapsed ? 'Expand' : 'Collapse'}</span>
         </div>`;
+      header.setAttribute('aria-controls', bodyId);
+      header.setAttribute('aria-expanded', String(!collapsed));
 
       body.id = bodyId;
-      if (collapsed) { body.classList.add('hidden'); header.querySelector('svg').style.transform = 'rotate(-180deg)'; }
+      if (collapsed) { body.classList.add('hidden'); }
 
-      // Toggle interactions (button)
-      const toggleBtn = header.querySelector('[data-toggle]');
-      const toggle = () => {
+      // Click entire header to toggle
+      header.addEventListener('click', (e)=>{
+        e.stopPropagation();
         const isHidden = body.classList.toggle('hidden');
-        toggleBtn.setAttribute('aria-expanded', String(!isHidden));
-        toggleBtn.querySelector('span').textContent = isHidden ? 'Expand' : 'Collapse';
-        toggleBtn.querySelector('svg').style.transform = isHidden ? 'rotate(-180deg)' : 'rotate(0deg)';
+        header.setAttribute('aria-expanded', String(!isHidden));
+        const label = header.querySelector('span'); if (label) label.textContent = isHidden ? 'Expand' : 'Collapse';
         if (isHidden) collapsedSeries.add(key); else collapsedSeries.delete(key);
         saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-      };
-      toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
-
-      // Make entire series header clickable to toggle
-      header.addEventListener('click', (e)=>{
-        if (e.target.closest('[data-toggle]')) return;
-        toggle();
       });
 
       // Per-series mini progress
