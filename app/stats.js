@@ -46,9 +46,9 @@ function renderSagaBreakdown(){
   const container = document.getElementById('sagaBreakdown');
   const bySaga = aggregateBySaga();
 
-  const fragments = [];
+  const parts = [];
 
-  // Sort sagas alphabetically for consistency
+  // Sort sagas alphabetically
   for (const [saga, m] of [...bySaga.entries()].sort((a,b)=> a[0].localeCompare(b[0]))){
     const pctRead = m.total ? Math.round((m.read/m.total)*100) : 0;
     const pctOwn  = m.total ? Math.round((m.owned/m.total)*100) : 0;
@@ -56,7 +56,7 @@ function renderSagaBreakdown(){
     const bodyId = 'sg-' + btoa(unescape(encodeURIComponent(String(saga)))).replace(/[^a-z0-9]/gi,'');
     const seriesMap = aggregateSeriesWithinSaga(saga);
 
-    // Build per-series rows (sorted by inferred series number ASC, then name)
+    // Per-series cards inside each saga
     const seriesRows = [...seriesMap.entries()]
       .sort((a,b)=>{
         const oa = a[1].order ?? Number.POSITIVE_INFINITY;
@@ -87,8 +87,8 @@ function renderSagaBreakdown(){
         `;
       }).join('');
 
-    // Improved saga header with chips and mini bars
-    fragments.push(`
+    // Enhanced saga header with chips and mini bars (no basic text)
+    parts.push(`
       <section class="panel rounded-xl border brand-border shadow-sm">
         <div class="px-4 py-3 rounded-t-xl header-grad">
           <div class="flex items-center gap-3 flex-wrap">
@@ -122,9 +122,9 @@ function renderSagaBreakdown(){
     `);
   }
 
-  container.innerHTML = fragments.join('') || '<div class="muted">No data.</div>';
+  container.innerHTML = parts.join('') || '<div class="muted">No data.</div>';
 
-  // Wire up toggles
+  // Toggle handlers
   container.querySelectorAll('button[data-bt]').forEach(btn=>{
     const id = btn.getAttribute('data-bt');
     const body = container.querySelector('#'+CSS.escape(id));
@@ -152,6 +152,6 @@ export function renderStatsTab(){
   elStatPct().textContent   = pct + '%';
   elStatBar().style.width   = pct + '%';
 
-  // Saga breakdown (now rendered directly into #sagaBreakdown)
+  // Saga sections
   renderSagaBreakdown();
 }
