@@ -1,4 +1,8 @@
-import { LS_KEYS, books, owned, read, collapsedSeries, saveJSON, seriesKey } from './state.js';
+import {
+  LS_KEYS, books, owned, read,
+  collapsedSeries, collapsedSagas,
+  saveJSON, seriesKey
+} from './state.js';
 
 const elResults = () => document.getElementById('results');
 const tplSeries = () => document.getElementById('tpl-series');
@@ -36,6 +40,7 @@ export function applyFilters(list) {
 }
 
 export function groupBySagaSeries(list){
+  // Map<saga, Map<series, Book[]>>
   const map = new Map();
   for (const b of list){
     if (!map.has(b.saga)) map.set(b.saga, new Map());
@@ -43,6 +48,7 @@ export function groupBySagaSeries(list){
     if (!sMap.has(b.series)) sMap.set(b.series, []);
     sMap.get(b.series).push(b);
   }
+  // sort inside each series by seriesIndex or number as fallback
   for (const [, sMap] of map){
     for (const [series, arr] of sMap){
       arr.sort((a,b)=> (a.seriesIndex ?? a.number ?? 0) - (b.seriesIndex ?? b.number ?? 0));
@@ -53,9 +59,11 @@ export function groupBySagaSeries(list){
 }
 
 export function renderFiltersOptions() {
+  // Sagas alphabetical
   const sagas = uniq(books.map(b=>b.saga)).filter(Boolean).sort();
 
-  const seriesOrder = new Map();
+  // Series dropdown in numerical order
+  const seriesOrder = new Map(); // name -> min inferred number
   for (const b of books){
     const name = b.series || 'Unknown';
     let num = Number.POSITIVE_INFINITY;
@@ -86,6 +94,16 @@ export function getSeriesAgg(sagaName, seriesName){
   return { total, own, rd, pctOwn: total? Math.round(own/total*100):0, pctRead: total? Math.round(rd/total*100):0 };
 }
 
+function inferSeriesNumberFromItems(items){
+  // Use min Sxx from id like "S02-07"
+  let best = Number.POSITIVE_INFINITY;
+  for (const b of items){
+    const m = String(b.id||'').match(/S(\d+)/i);
+    if (m) best = Math.min(best, parseInt(m[1],10));
+  }
+  return Number.isFinite(best) ? best : null;
+}
+
 export function render(onAfterCardHook){
   const filtered = applyFilters(books);
   const container = elResults();
@@ -97,11 +115,46 @@ export function render(onAfterCardHook){
     return;
   }
 
+  // Build collapsible saga sections
   for (const [saga, seriesMap] of grouped){
-    const sagaBlock = document.createElement('div');
-    sagaBlock.className = 'space-y-4';
-    sagaBlock.innerHTML = `<h2 class="text-2xl font-bold">Saga: ${escapeHtml(saga)}</h2>`;
+    // Wrapper panel for saga
+    const sagaSection = document.createElement('section');
+    sagaSection.className = 'panel rounded-xl border brand-border shadow-sm';
 
+    // Header
+    const sagaBodyId = 'sbody-' + btoa(unescape(encodeURIComponent(String(saga)))).replace(/[^a-z0-9]/gi,'');
+    const isSagaCollapsed = collapsedSagas.has(saga);
+
+    sagaSection.innerHTML = `
+      <div class="px-4 py-3 rounded-t-xl header-grad">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl sm:text-2xl font-bold">Saga: ${escapeHtml(saga)}</h2>
+          <button type="button" aria-expanded="${!isSagaCollapsed}" aria-controls="${sagaBodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-saga-toggle>
+            <span class="text-sm">${isSagaCollapsed ? 'Expand' : 'Collapse'}</span>
+            <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+        </div>
+      </div>
+      <div class="p-4" id="${sagaBodyId}"></div>
+    `;
+
+    const sagaBody = sagaSection.querySelector('#' + sagaBodyId);
+    const sagaToggleBtn = sagaSection.querySelector('[data-saga-toggle]');
+    if (isSagaCollapsed){
+      sagaBody.classList.add('hidden');
+      sagaToggleBtn.querySelector('svg').style.transform = 'rotate(-180deg)';
+    }
+    sagaToggleBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const hidden = sagaBody.classList.toggle('hidden');
+      sagaToggleBtn.setAttribute('aria-expanded', String(!hidden));
+      sagaToggleBtn.querySelector('span').textContent = hidden ? 'Expand' : 'Collapse';
+      sagaToggleBtn.querySelector('svg').style.transform = hidden ? 'rotate(-180deg)' : 'rotate(0deg)';
+      if (hidden) collapsedSagas.add(saga); else collapsedSagas.delete(saga);
+      saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
+    });
+
+    // Add all series inside saga body (each series remains independently collapsible)
     for (const [series, items] of seriesMap){
       const node = tplSeries().content.cloneNode(true);
       const header = node.querySelector('[data-series-header]');
@@ -111,10 +164,15 @@ export function render(onAfterCardHook){
       const collapsed = collapsedSeries.has(key);
       const bodyId = 'body-' + btoa(unescape(encodeURIComponent(key))).replace(/[^a-z0-9]/gi,'');
 
+      const sNum = inferSeriesNumberFromItems(items);
+      const niceSeriesTitle = sNum != null
+        ? `Series ${sNum}: ${escapeHtml(series)}`
+        : `Series: ${escapeHtml(series)}`;
+
       header.innerHTML = `
         <div class="rounded-t-xl px-4 py-2 header-grad">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Series: ${escapeHtml(series)}</h3>
+            <h3 class="text-lg font-semibold">${niceSeriesTitle}</h3>
             <button type="button" aria-expanded="${!collapsed}" aria-controls="${bodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-toggle>
               <span class="text-sm">${collapsed ? 'Expand' : 'Collapse'}</span>
               <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -125,6 +183,7 @@ export function render(onAfterCardHook){
       body.id = bodyId;
       if (collapsed) { body.classList.add('hidden'); header.querySelector('svg').style.transform = 'rotate(-180deg)'; }
 
+      // Toggle interactions
       const toggleBtn = header.querySelector('[data-toggle]');
       const toggle = () => {
         const isHidden = body.classList.toggle('hidden');
@@ -136,8 +195,9 @@ export function render(onAfterCardHook){
       };
       toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
 
-      const mini = node.querySelector('[data-series-mini]');
+      // Per-series mini progress
       const agg = getSeriesAgg(saga, series);
+      const mini = node.querySelector('[data-series-mini]');
       mini.innerHTML = `
         <div class="grid sm:grid-cols-2 gap-2 text-sm">
           <div>
@@ -163,8 +223,10 @@ export function render(onAfterCardHook){
         rd .addEventListener('change', () => { onAfterCardHook('read', b.id, rd.checked); });
         grid.appendChild(card);
       }
-      sagaBlock.appendChild(node);
+
+      sagaBody.appendChild(node);
     }
-    elResults().appendChild(sagaBlock);
+
+    container.appendChild(sagaSection);
   }
 }
