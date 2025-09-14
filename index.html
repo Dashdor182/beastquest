@@ -118,20 +118,16 @@
           </div>
         </section>
 
-        <!-- Saga breakdown (collapsible sagas; each shows per-series stats when expanded) -->
-        <section class="panel rounded-xl border brand-border shadow-sm">
-          <div class="px-4 py-3 rounded-t-xl header-grad">
-            <h3 class="text-lg font-semibold">Saga Breakdown</h3>
-          </div>
-          <div class="p-4" id="sagaBreakdown"></div>
-        </section>
+        <!-- Direct saga list (no outer "Saga breakdown" wrapper) -->
+        <div id="sagaBreakdown" class="grid gap-4"></div>
       </div>
     </section>
   </div>
 
   <!-- Templates -->
   <template id="tpl-series">
-    <section class="panel rounded-xl border brand-border shadow-sm">
+    <!-- Added mb spacing so series blocks aren’t cramped -->
+    <section class="panel rounded-xl border brand-border shadow-sm mb-4 sm:mb-6">
       <div class="px-4 py-3 rounded-t-xl header-grad" data-series-header></div>
       <div class="p-4" data-series-body>
         <!-- Per-series mini bars -->
