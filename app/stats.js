@@ -87,7 +87,7 @@ function renderSagaBreakdown(){
         `;
       }).join('');
 
-    // Enhanced saga header with chips and mini bars (no basic text)
+    // Saga header: chips only, no mini bars
     parts.push(`
       <section class="panel rounded-xl border brand-border shadow-sm">
         <div class="px-4 py-3 rounded-t-xl header-grad">
@@ -101,16 +101,6 @@ function renderSagaBreakdown(){
               <span class="text-sm">Expand</span>
               <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
-          </div>
-          <div class="mt-3 grid sm:grid-cols-2 gap-2">
-            <div>
-              <div class="flex justify-between text-xs muted"><span>Read</span><span>${pctRead}%</span></div>
-              <div class="progress progress-track"><div class="progress progress-read" style="width:${pctRead}%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-xs muted"><span>Owned</span><span>${pctOwn}%</span></div>
-              <div class="progress progress-track"><div class="progress progress-own" style="width:${pctOwn}%"></div></div>
-            </div>
           </div>
         </div>
         <div id="${bodyId}" class="p-4 hidden">
