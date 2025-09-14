@@ -64,7 +64,6 @@ export function ensureDefaultCollapsedForCurrentBooks(){
   const allSagas = allSagaKeysFromBooks(books);
   const storedSagas = localStorage.getItem(LS_KEYS.COLLAPSED_SAGAS);
   if (storedSagas == null){
-    // default collapsed for sagas too
     collapsedSagas = new Set(allSagas);
     saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
   } else {
