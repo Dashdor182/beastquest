@@ -1,0 +1,52 @@
+:root{
+    --bg:#181923;
+    --panel:#292d41;
+    --border:#38405d;
+    --chip:#4c546d;
+    --muted:#6f687a;
+    --accent:#b59e90;
+    --accent2:#a58d89;
+    --text:#e8e9ee;
+  }
+  .body-dark{ background:var(--bg); color:var(--text); }
+  .panel{ background:var(--panel); }
+  .brand-border{ border-color:var(--border)!important; }
+  .muted{ color:var(--muted)!important; }
+  .accent{ background:var(--accent)!important; }
+  .accent2{ background:var(--accent2)!important; }
+  .badge{ background:color-mix(in oklab, var(--accent) 25%, white); color:#1b1c26; padding:2px 6px; border-radius:6px; font-size:.75rem; font-weight:500; }
+  .progress{ height: 8px; border-radius: 9999px; }
+  .progress-xs{ height: 6px; border-radius: 9999px; }
+  .progress-track{ background:color-mix(in oklab, var(--border) 75%, black); }
+  .progress-read{ background:var(--accent2)!important; }
+  .progress-own{ background:var(--accent)!important; }
+  .card { transition: transform .15s ease, box-shadow .15s ease; background:color-mix(in oklab, var(--panel) 85%, black); }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(0 0 0 / .35); }
+  .tab-panel.hidden{ display:none; }
+  .chev { transition: transform .15s ease; }
+  
+  /* Tabs */
+  .tab-btn{ border-bottom-width:2px; padding:.75rem 1rem; font-size:.95rem; font-weight:700; }
+  .tab-btn.active{ border-color:var(--accent); color:var(--accent); }
+  .tab-btn.inactive{ border-color:transparent; color:var(--muted); }
+  
+  /* Inputs & buttons */
+  .input{ background:var(--panel); color:var(--text); border:1px solid var(--border); padding:.5rem .75rem; }
+  .input:focus{ outline:none; box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent); border-color:var(--accent); }
+  .btn{ border:1px solid var(--border); color:var(--text); background:color-mix(in oklab, var(--panel) 90%, black); border-radius:.5rem; padding:.5rem .75rem; }
+  .btn:hover{ background:color-mix(in oklab, var(--chip) 65%, black); }
+  .btn-danger{ border-color:color-mix(in oklab, var(--accent2) 40%, black); color:var(--accent2); }
+  .btn-danger:hover{ background:color-mix(in oklab, var(--accent2) 15%, black); }
+  .header-grad{ background:linear-gradient(135deg, var(--chip), color-mix(in oklab, var(--chip) 60%, var(--panel))); }
+  
+  /* Mobile & a11y */
+  body{ -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  @media (prefers-reduced-motion: reduce){
+    .card:hover{ transform:none; box-shadow:none; }
+    .chev, .tab-btn{ transition:none; }
+  }
+  .sticky-toolbar{ position:sticky; top:0; z-index:30; }
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+  [data-toggle]{ padding:.5rem .75rem; border-radius:.5rem; }
+  
