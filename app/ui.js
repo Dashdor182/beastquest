@@ -20,7 +20,12 @@ export const elStatPct   = () => document.getElementById('statPct');
 export const elStatBar   = () => document.getElementById('statBar');
 
 export function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+  return String(str).replace(/[&<>"']/g, (s) => (
+    s === '&' ? '&amp;' :
+    s === '<' ? '&lt;' :
+    s === '>' ? '&gt;' :
+    s === '"' ? '&quot;' : '&#39;'
+  ));
 }
 const uniq = (arr)=> [...new Set(arr)];
 
@@ -151,82 +156,4 @@ export function render(onAfterCardHook){
       sagaToggleBtn.querySelector('span').textContent = hidden ? 'Expand' : 'Collapse';
       sagaToggleBtn.querySelector('svg').style.transform = hidden ? 'rotate(-180deg)' : 'rotate(0deg)';
       if (hidden) collapsedSagas.add(saga); else collapsedSagas.delete(saga);
-      saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
-    });
-
-    // Add all series inside saga body (each series remains independently collapsible)
-    for (const [series, items] of seriesMap){
-      const node = tplSeries().content.cloneNode(true);
-      const header = node.querySelector('[data-series-header]');
-      const body   = node.querySelector('[data-series-body]');
-
-      const key = seriesKey(saga, series);
-      const collapsed = collapsedSeries.has(key);
-      const bodyId = 'body-' + btoa(unescape(encodeURIComponent(key))).replace(/[^a-z0-9]/gi,'');
-
-      const sNum = inferSeriesNumberFromItems(items);
-      const niceSeriesTitle = sNum != null
-        ? `Series ${sNum}: ${escapeHtml(series)}`
-        : `Series: ${escapeHtml(series)}`;
-
-      header.innerHTML = `
-        <div class="rounded-t-xl px-4 py-2 header-grad">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">${niceSeriesTitle}</h3>
-            <button type="button" aria-expanded="${!collapsed}" aria-controls="${bodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-toggle>
-              <span class="text-sm">${collapsed ? 'Expand' : 'Collapse'}</span>
-              <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-          </div>
-        </div>`;
-
-      body.id = bodyId;
-      if (collapsed) { body.classList.add('hidden'); header.querySelector('svg').style.transform = 'rotate(-180deg)'; }
-
-      // Toggle interactions
-      const toggleBtn = header.querySelector('[data-toggle]');
-      const toggle = () => {
-        const isHidden = body.classList.toggle('hidden');
-        toggleBtn.setAttribute('aria-expanded', String(!isHidden));
-        toggleBtn.querySelector('span').textContent = isHidden ? 'Expand' : 'Collapse';
-        toggleBtn.querySelector('svg').style.transform = isHidden ? 'rotate(-180deg)' : 'rotate(0deg)';
-        if (isHidden) collapsedSeries.add(key); else collapsedSeries.delete(key);
-        saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-      };
-      toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
-
-      // Per-series mini progress
-      const agg = getSeriesAgg(saga, series);
-      const mini = node.querySelector('[data-series-mini]');
-      mini.innerHTML = `
-        <div class="grid sm:grid-cols-2 gap-2 text-sm">
-          <div>
-            <div class="flex justify-between muted"><span>Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
-            <div class="progress-xs progress-track"><div class="progress-xs progress-read" style="width:${agg.pctRead}%"></div></div>
-          </div>
-          <div>
-            <div class="flex justify-between muted"><span>Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
-            <div class="progress-xs progress-track"><div class="progress-xs progress-own" style="width:${agg.pctOwn}%"></div></div>
-          </div>
-        </div>`;
-
-      const grid = node.querySelector('[data-series-grid]');
-      for (const b of items){
-        const card = tplCard().content.cloneNode(true);
-        card.querySelector('[data-title]').textContent = `${b.number ? b.number + '. ' : ''}${b.title}`;
-        card.querySelector('[data-number]').textContent = b.id;
-        const own = card.querySelector('[data-own]');
-        const rd  = card.querySelector('[data-read]');
-        own.checked = owned.has(b.id);
-        rd.checked  = read.has(b.id);
-        own.addEventListener('change', () => { onAfterCardHook('own', b.id, own.checked); });
-        rd .addEventListener('change', () => { onAfterCardHook('read', b.id, rd.checked); });
-        grid.appendChild(card);
-      }
-
-      sagaBody.appendChild(node);
-    }
-
-    container.appendChild(sagaSection);
-  }
-}
+      sav
