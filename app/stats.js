@@ -1,8 +1,10 @@
-import { books, owned, read } from './state.js';
+import {
+  books, owned, read,
+  collapsedSagas, LS_KEYS, saveJSON
+} from './state.js';
 import { escapeHtml, elStatTotal, elStatOwned, elStatRead, elStatPct, elStatBar } from './ui.js';
 
 function aggregateBySaga(){
-  // Map<saga, { total, owned, read }>
   const map = new Map();
   for (const b of books){
     const key = b.saga || 'Unknown';
@@ -26,7 +28,6 @@ function aggregateSeriesWithinSaga(saga){
     m.total++;
     if (owned.has(b.id)) m.owned++;
     if (read.has(b.id))  m.read++;
-    // infer numeric order from id Sxx
     const mm = String(b.id||'').match(/S(\d+)/i);
     if (mm){
       const n = parseInt(mm[1],10);
@@ -48,15 +49,16 @@ function renderSagaBreakdown(){
 
   const parts = [];
 
-  // Sort sagas alphabetically
   for (const [saga, m] of [...bySaga.entries()].sort((a,b)=> a[0].localeCompare(b[0]))){
     const pctRead = m.total ? Math.round((m.read/m.total)*100) : 0;
     const pctOwn  = m.total ? Math.round((m.owned/m.total)*100) : 0;
 
     const bodyId = 'sg-' + btoa(unescape(encodeURIComponent(String(saga)))).replace(/[^a-z0-9]/gi,'');
+    const isCollapsed = collapsedSagas.has(saga);
+
     const seriesMap = aggregateSeriesWithinSaga(saga);
 
-    // Per-series cards inside each saga
+    // Per-series cards with tiny spark bars
     const seriesRows = [...seriesMap.entries()]
       .sort((a,b)=>{
         const oa = a[1].order ?? Number.POSITIVE_INFINITY;
@@ -72,7 +74,10 @@ function renderSagaBreakdown(){
         return `
           <div class="p-3 border brand-border rounded-lg">
             <div class="flex justify-between items-center text-sm">
-              <div class="font-medium">${label}</div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium">${label}</span>
+                <span class="spark"><span class="fill" style="width:${pctR}%"></span></span>
+              </div>
               <div class="text-xs muted">${mm.read}/${mm.total} read • ${mm.owned}/${mm.total} owned</div>
             </div>
             <div class="mt-2">
@@ -87,23 +92,21 @@ function renderSagaBreakdown(){
         `;
       }).join('');
 
-    // Saga header: chips only, no mini bars
+    // Saga header (chips only), persisted collapse across tabs
     parts.push(`
       <section class="panel rounded-xl border brand-border shadow-sm">
-        <div class="px-4 py-3 rounded-t-xl header-grad">
-          <div class="flex items-center gap-3 flex-wrap">
-            <h4 class="text-lg font-semibold">Saga: ${escapeHtml(saga)}</h4>
-            <div class="flex items-center gap-2 text-xs">
-              <span class="badge">Read ${m.read}/${m.total} (${pctRead}%)</span>
-              <span class="badge">Owned ${m.owned}/${m.total} (${pctOwn}%)</span>
-            </div>
-            <button type="button" class="ml-auto inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-bt="${bodyId}" aria-expanded="false">
-              <span class="text-sm">Expand</span>
-              <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
+        <div class="px-4 py-3 rounded-t-xl header-grad flex items-center gap-3 flex-wrap" data-stats-saga-header>
+          <h4 class="text-lg font-semibold">Saga: ${escapeHtml(saga)}</h4>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="badge">Read ${m.read}/${m.total} (${pctRead}%)</span>
+            <span class="badge">Owned ${m.owned}/${m.total} (${pctOwn}%)</span>
           </div>
+          <button type="button" class="ml-auto inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-bt="${bodyId}" aria-expanded="${!isCollapsed}">
+            <span class="text-sm">${isCollapsed ? 'Expand' : 'Collapse'}</span>
+            <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
         </div>
-        <div id="${bodyId}" class="p-4 hidden">
+        <div id="${bodyId}" class="p-4 ${isCollapsed ? 'hidden':''}">
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             ${seriesRows || '<div class="muted">No series data.</div>'}
           </div>
@@ -114,15 +117,27 @@ function renderSagaBreakdown(){
 
   container.innerHTML = parts.join('') || '<div class="muted">No data.</div>';
 
-  // Toggle handlers
-  container.querySelectorAll('button[data-bt]').forEach(btn=>{
+  // Toggle handlers + persisted state
+  container.querySelectorAll('[data-stats-saga-header]').forEach(header=>{
+    const btn = header.querySelector('button[data-bt]');
     const id = btn.getAttribute('data-bt');
     const body = container.querySelector('#'+CSS.escape(id));
+
+    // Make entire header clickable to toggle
+    header.addEventListener('click', (e)=>{
+      if (e.target.closest('button[data-bt]')) return;
+      btn.click();
+    });
+
     btn.addEventListener('click', ()=>{
       const hidden = body.classList.toggle('hidden');
       btn.setAttribute('aria-expanded', String(!hidden));
       btn.querySelector('span').textContent = hidden ? 'Expand' : 'Collapse';
       btn.querySelector('svg').style.transform = hidden ? 'rotate(-180deg)' : 'rotate(0deg)';
+      // Persist using shared saga state
+      const sagaLabel = header.querySelector('h4')?.textContent?.replace(/^Saga:\s*/,'')?.trim() || '';
+      if (hidden) collapsedSagas.add(sagaLabel); else collapsedSagas.delete(sagaLabel);
+      saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
     });
   });
 }
