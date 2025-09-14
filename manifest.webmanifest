@@ -1,26 +1,14 @@
 {
-    "id": "beastquest-app",
-    "name": "My Beast Quest Collection",
-    "short_name": "BeastQuest",
-    "description": "Track Owned/Read progress across Beast Quest sagas and series.",
-    "start_url": "./",
-    "scope": "./",
-    "display": "standalone",
-    "background_color": "#181923",
-    "theme_color": "#181923",
-    "icons": [
-      {
-        "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23181923'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='system-ui, sans-serif' font-size='260' fill='%23b59e90'%3EB%3C/text%3E%3C/svg%3E",
-        "sizes": "any",
-        "type": "image/svg+xml",
-        "purpose": "any"
-      },
-      {
-        "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' ry='80' fill='%23181923'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='system-ui, sans-serif' font-size='260' fill='%23b59e90'%3EBQ%3C/text%3E%3C/svg%3E",
-        "sizes": "any",
-        "type": "image/svg+xml",
-        "purpose": "maskable any"
-      }
-    ]
-  }
-  
+  "id": "beastquest-app",
+  "name": "My Beast Quest Collection",
+  "short_name": "BeastQuest",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#181923",
+  "theme_color": "#181923",
+  "icons": [
+    { "src": "./icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
