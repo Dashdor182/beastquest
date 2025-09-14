@@ -2,8 +2,8 @@
    Scope: GitHub Pages subpath (e.g., /beastquest/)
    Strategy: App Shell (offline index.html) + cache-first for static assets
 */
+const APP_VERSION = 'bq-2025-09-14-02';
 
-const APP_VERSION = 'bq-2025-09-14-01';
 const CACHE_NAME  = `beastquest-${APP_VERSION}`;
 
 /* Precache: use relative paths so they resolve under the SW scope (/beastquest/) */
@@ -112,3 +112,4 @@ self.addEventListener('fetch', (event) => {
     return new Response('', { status: 504, statusText: 'Gateway Timeout' });
   })());
 });
+
