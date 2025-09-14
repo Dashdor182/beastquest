@@ -3,78 +3,106 @@
   --panel:#292d41;     /* cards/panels */
   --border:#38405d;    /* borders/tracks */
   --chip:#4c546d;      /* headers/subpanels */
-  --muted:#6f687a;     /* legacy (overridden below for AA) */
-  --accent:#b59e90;    /* primary accent */
-  --accent2:#a58d89;   /* secondary accent */
+  --muted:#6f687a;     /* legacy muted (kept for reference) */
+  --muted-aa:#c2c7d6;  /* adjusted to meet AA on dark panels */
+  --accent:#b59e90;    /* primary accent (owned) */
+  --accent2:#a58d89;   /* secondary accent (read) */
   --text:#e8e9ee;      /* body text */
 }
 
-.body-dark{ background:var(--bg); color:var(--text); }
+body.body-dark{ background:var(--bg); color:var(--text); }
 
-/* Panels & borders */
+/* Panels & cards */
 .panel{ background:var(--panel); }
+.card {
+  transition: transform .15s ease, box-shadow .15s ease;
+  background: color-mix(in oklab, var(--panel) 85%, black);
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(0 0 0 / .35); }
+
 .brand-border{ border-color:var(--border)!important; }
 
-/* AA contrast for muted text: derive from text color to keep ratio high on dark panels */
-.muted{ color: color-mix(in oklab, var(--text) 82%, var(--panel)); }
+/* Text */
+.muted{ color:var(--muted-aa)!important; }
 
-/* Chips with stronger contrast */
+/* Chips */
 .badge{
-  background: color-mix(in oklab, var(--accent) 30%, white);
-  color: #0d0f14;
-  padding:2px 8px;
+  background: var(--accent);
+  color:#11131a;                   /* dark text for strong contrast */
+  padding:2px 6px;
   border-radius:6px;
   font-size:.75rem;
   font-weight:600;
-  letter-spacing:.2px;
+  border:1px solid rgb(0 0 0 / .25); /* ensure outline on light chip */
 }
 
-/* Progress bars */
+/* Progress */
 .progress{ height: 8px; border-radius: 9999px; }
 .progress-xs{ height: 6px; border-radius: 9999px; }
-.progress-track{ background:color-mix(in oklab, var(--border) 75%, black); }
-.progress-read{ background:var(--accent2)!important; }
-.progress-own{ background:var(--accent)!important; }
+.progress-track{ background: color-mix(in oklab, var(--border) 75%, black); }
+.progress-read{ background: var(--accent2)!important; }
+.progress-own { background: var(--accent)!important; }
 
-/* Tiny spark bars for Stats */
-.spark{ width:64px; height:6px; border-radius:9999px; background:color-mix(in oklab, var(--border) 75%, black); overflow:hidden; }
-.spark > .fill{ height:100%; background:var(--accent2); }
-
-/* Cards */
-.card { transition: transform .15s ease, box-shadow .15s ease; background:color-mix(in oklab, var(--panel) 85%, black); }
-.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(0 0 0 / .35); }
+/* Micro “spark” bars (Stats series rows) */
+.spark {
+  width: 64px;
+  height: 6px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--border) 70%, black);
+  overflow: hidden;
+}
+.spark .fill{ height: 100%; border-radius: inherit; }
+.spark .read{ background: var(--accent2); }
+.spark .own { background: var(--accent);  }
 
 /* Tabs */
 .tab-panel.hidden{ display:none; }
 .tab-btn{ border-bottom-width:2px; padding:.75rem 1rem; font-size:.95rem; font-weight:700; }
 .tab-btn.active{ border-color:var(--accent); color:var(--accent); }
-.tab-btn.inactive{ border-color:transparent; color:var(--muted); }
+.tab-btn.inactive{ border-color:transparent; color:var(--muted-aa); }
 
 /* Inputs & buttons */
-.input{ background:var(--panel); color:var(--text); border:1px solid var(--border); padding:.5rem .75rem; }
-.input:focus{ outline:none; box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent); border-color:var(--accent); }
-
-.btn{ border:1px solid var(--border); color:var(--text); background:color-mix(in oklab, var(--panel) 90%, black); border-radius:.5rem; padding:.5rem .75rem; }
-.btn:hover{ background:color-mix(in oklab, var(--chip) 65%, black); }
-.btn-danger{ border-color:color-mix(in oklab, var(--accent2) 40%, black); color:var(--accent2); }
-.btn-danger:hover{ background:color-mix(in oklab, var(--accent2) 15%, black); }
-.btn-ghost{ background:transparent; }
-.btn-ghost:hover{ background:color-mix(in oklab, var(--panel) 80%, black); }
+.input{
+  background:var(--panel);
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:.5rem .75rem;
+}
+.input:focus{
+  outline:none;
+  box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent);
+  border-color:var(--accent);
+}
+.btn{
+  border:1px solid var(--border);
+  color:var(--text);
+  background: color-mix(in oklab, var(--panel) 90%, black);
+  border-radius:.5rem;
+  padding:.5rem .75rem;
+}
+.btn:hover{ background: color-mix(in oklab, var(--chip) 65%, black); }
+.btn-danger{ border-color: color-mix(in oklab, var(--accent2) 40%, black); color: var(--accent2); }
+.btn-danger:hover{ background: color-mix(in oklab, var(--accent2) 15%, black); }
 
 /* Headers */
-.header-grad{ background:linear-gradient(135deg, var(--chip), color-mix(in oklab, var(--chip) 60%, var(--panel))); }
+.header-grad{
+  background: linear-gradient(135deg, var(--chip), color-mix(in oklab, var(--chip) 60%, var(--panel)));
+}
 
-/* Sticky elements */
+/* Sticky: controls bar & saga headers */
 .sticky-toolbar{ position:sticky; top:0; z-index:30; }
-.sticky-saga{ position: sticky; top: 0; z-index: 25; }
+.saga-sticky{ position: sticky; top: .5rem; z-index: 20; border-bottom:1px solid var(--border); }
 
-/* Misc */
-.no-scrollbar::-webkit-scrollbar{ display:none; }
-.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
-.series-header-click{ cursor:pointer; }
-.chev { transition: transform .15s ease; }
+/* Clickable header area for series */
+.series-header-click{ cursor: pointer; }
 
+/* Mobile & accessibility */
+body{ -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce){
   .card:hover{ transform:none; box-shadow:none; }
-  .chev, .tab-btn{ transition:none; }
+  .tab-btn{ transition:none; }
 }
+
+/* Hide scrollbars on small overflow containers */
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
