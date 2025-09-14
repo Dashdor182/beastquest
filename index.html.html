@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beast Quest Collection — Scalable</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg:#181923;        /* base background */
+      --panel:#292d41;     /* cards/panels */
+      --border:#38405d;    /* borders/tracks */
+      --chip:#4c546d;      /* headers/subpanels */
+      --muted:#6f687a;     /* muted text */
+      --accent:#b59e90;    /* primary accent */
+      --accent2:#a58d89;   /* secondary accent */
+      --text:#e8e9ee;      /* body text */
+    }
+    .body-dark{ background:var(--bg); color:var(--text); }
+    .panel{ background:var(--panel); }
+    .brand-border{ border-color:var(--border)!important; }
+    .muted{ color:var(--muted)!important; }
+    .accent{ background:var(--accent)!important; }
+    .accent2{ background:var(--accent2)!important; }
+    .badge{ background:color-mix(in oklab, var(--accent) 25%, white); color:#1b1c26; padding:2px 6px; border-radius:6px; font-size:.75rem; font-weight:500; }
+    .progress{ height: 8px; border-radius: 9999px; }
+    .progress-xs{ height: 6px; border-radius: 9999px; }
+    .progress-track{ background:color-mix(in oklab, var(--border) 75%, black); }
+    .progress-read{ background:var(--accent2)!important; }
+    .progress-own{ background:var(--accent)!important; }
+    .card { transition: transform .15s ease, box-shadow .15s ease; background:color-mix(in oklab, var(--panel) 85%, black); }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(0 0 0 / .35); }
+    .tab-panel.hidden{ display:none; }
+    .chev { transition: transform .15s ease; }
+
+    /* Tabs */
+    .tab-btn{ border-bottom-width:2px; padding:.75rem 1rem; font-size:.95rem; font-weight:700; }
+    .tab-btn.active{ border-color:var(--accent); color:var(--accent); }
+    .tab-btn.inactive{ border-color:transparent; color:var(--muted); }
+
+    /* Inputs & buttons */
+    .input{ background:var(--panel); color:var(--text); border:1px solid var(--border); padding:.5rem .75rem; }
+    .input:focus{ outline:none; box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent); border-color:var(--accent); }
+    .btn{ border:1px solid var(--border); color:var(--text); background:color-mix(in oklab, var(--panel) 90%, black); border-radius:.5rem; padding:.5rem .75rem; }
+    .btn:hover{ background:color-mix(in oklab, var(--chip) 65%, black); }
+    .btn-danger{ border-color:color-mix(in oklab, var(--accent2) 40%, black); color:var(--accent2); }
+    .btn-danger:hover{ background:color-mix(in oklab, var(--accent2) 15%, black); }
+    .header-grad{ background:linear-gradient(135deg, var(--chip), color-mix(in oklab, var(--chip) 60%, var(--panel))); }
+    /* Mobile & accessibility optimizations */
+    body{ -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    @media (prefers-reduced-motion: reduce){
+      .card:hover{ transform:none; box-shadow:none; }
+      .chev, .tab-btn{ transition:none; }
+    }
+    .sticky-toolbar{ position:sticky; top:0; z-index:30; }
+    .no-scrollbar::-webkit-scrollbar{ display:none; }
+    .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+    [data-toggle]{ padding:.5rem .75rem; border-radius:.5rem; }
+  </style>
+</head>
+<body class="body-dark">
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <header class="mb-6">
+      <h1 class="text-3xl sm:text-4xl font-bold">Beast Quest Collection</h1>
+      <p class="muted">Data‑driven tracker for 100+ books — no hardcoded markup.</p>
+    </header>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b brand-border">
+      <nav class="-mb-px flex gap-2 overflow-x-auto no-scrollbar" role="tablist">
+        <button id="tabOverview" class="tab-btn active" data-target="#tab-overview" aria-selected="true">Overview</button>
+        <button id="tabStats" class="tab-btn inactive" data-target="#tab-stats" aria-selected="false">Stats</button>
+      </nav>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
+      <!-- Controls -->
+      <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-6 sticky-toolbar">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 items-end">
+          <label class="block">
+            <span class="block text-sm font-medium muted">Search title</span>
+            <input id="search" type="text" placeholder="e.g., Ferno, Sea Serpent…" class="mt-1 w-full rounded-lg input" />
+          </label>
+
+          <label class="block">
+            <span class="block text-sm font-medium muted">Saga</span>
+            <select id="filterSaga" class="mt-1 w-full rounded-lg input">
+              <option value="">All sagas</option>
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="block text-sm font-medium muted">Series</span>
+            <select id="filterSeries" class="mt-1 w-full rounded-lg input">
+              <option value="">All series</option>
+            </select>
+          </label>
+
+          <div class="flex gap-2">
+            <label class="flex-1">
+              <span class="block text-sm font-medium muted">Status</span>
+              <select id="filterStatus" class="mt-1 w-full rounded-lg input">
+                <option value="all">All</option>
+                <option value="owned">Owned only</option>
+                <option value="read">Read only</option>
+                <option value="unowned">Not owned</option>
+                <option value="unread">Not read</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <details id="toolsCollapse" class="group">
+            <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
+              <span class="badge">Tools</span>
+              <span>Import / Export & Reset</span>
+              <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="btnImportBooks" class="btn">Import Books</button>
+              <button id="btnImportBooksCSV" class="btn">Import Books (CSV)</button>
+              <button id="btnExportBooks" class="btn">Export Books</button>
+              <button id="btnImportState" class="btn">Import State</button>
+              <button id="btnExportState" class="btn">Export State</button>
+              <button id="btnClearState" class="btn btn-danger">Clear State</button>
+              <input id="hiddenFile" type="file" accept="application/json" class="hidden" />
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- Results container -->
+      <div id="results" class="space-y-8"></div>
+    </section>
+
+    <!-- STATS TAB -->
+    <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
+      <div class="grid gap-6">
+        <!-- Global stats -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Total Books</div>
+            <div id="statTotal" class="text-3xl font-semibold">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Owned</div>
+            <div id="statOwned" class="text-3xl font-semibold" style="color:var(--accent)">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Read</div>
+            <div id="statRead" class="text-3xl font-semibold" style="color:var(--accent2)">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4">
+            <div class="flex items-center justify-between text-sm muted"><span>Completion</span><span id="statPct">0%</span></div>
+            <div class="progress mt-2 progress-track">
+              <div id="statBar" class="progress accent" style="width: 0%"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel rounded-xl border brand-border shadow-sm">
+          <div class="px-4 py-3 rounded-t-xl header-grad">
+            <h3 class="text-lg font-semibold">Per‑Saga Progress</h3>
+          </div>
+          <div class="p-4" id="sagaStats"></div>
+        </section>
+        <section class="panel rounded-xl border brand-border shadow-sm">
+          <div class="px-4 py-3 rounded-t-xl header-grad">
+            <h3 class="text-lg font-semibold">Per‑Series Progress</h3>
+          </div>
+          <div class="p-4" id="seriesStats"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <template id="tpl-series">
+    <section class="panel rounded-xl border brand-border shadow-sm">
+      <div class="px-4 py-3 rounded-t-xl header-grad" data-series-header></div>
+      <div class="p-4" data-series-body>
+        <!-- Per-series mini bars -->
+        <div data-series-mini class="mb-3"></div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-series-grid></div>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-card">
+    <article class="card rounded-lg border brand-border p-3 sm:p-4">
+      <div class="flex items-start justify-between gap-3">
+        <h4 class="font-medium" data-title></h4>
+        <span class="badge" data-number></span>
+      </div>
+      <div class="mt-3 flex items-center gap-4">
+        <label class="inline-flex items-center gap-2">
+          <input type="checkbox" data-own class="h-6 w-6 sm:h-5 sm:w-5 rounded brand-border" style="accent-color: var(--accent)">
+          <span>Own</span>
+        </label>
+        <label class="inline-flex items-center gap-2">
+          <input type="checkbox" data-read class="h-6 w-6 sm:h-5 sm:w-5 rounded brand-border" style="accent-color: var(--accent2)">
+          <span>Read</span>
+        </label>
+      </div>
+    </article>
+  </template>
+
+  <script>
+  // -------------------------------
+  // Data + persistence
+  // -------------------------------
+  const LS_KEYS = { BOOKS: 'bq:books', OWNED: 'bq:owned', READ: 'bq:read', COLLAPSED: 'bq:collapsedSeries' };
+
+  // Starter dataset (first 12 as example). Replace via Import Books with full list (100+).
+  const STARTER_BOOKS = [
+    { id:'S01-01', number:1,  title:'Ferno the Fire Dragon', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:1 },
+    { id:'S01-02', number:2,  title:'Sepron the Sea Serpent', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:2 },
+    { id:'S01-03', number:3,  title:'Arcta the Mountain Giant', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:3 },
+    { id:'S01-04', number:4,  title:'Tagus the Horse-Man', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:4 },
+    { id:'S01-05', number:5,  title:'Nanook the Snow Monster', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:5 },
+    { id:'S01-06', number:6,  title:'Epos the Flame Bird', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:6 },
+    { id:'S02-07', number:7,  title:'Zepha the Monster Squid', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:1 },
+    { id:'S02-08', number:8,  title:'Claw the Giant Monkey', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:2 },
+    { id:'S02-09', number:9,  title:'Soltra the Stone Charmer', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:3 },
+    { id:'S02-10', number:10, title:'Vipero the Snake Man', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:4 },
+    { id:'S02-11', number:11, title:'Arachnid the King of Spiders', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:5 },
+    { id:'S02-12', number:12, title:'Trillion the Three‑Headed Lion', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:6 },
+  ];
+
+  function loadJSON(key, fallback) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch { return fallback; }
+  }
+  function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+  let books = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
+  let owned = new Set(loadJSON(LS_KEYS.OWNED, []));
+  let read  = new Set(loadJSON(LS_KEYS.READ,  []));
+  let collapsedSeries = new Set(loadJSON(LS_KEYS.COLLAPSED, [])); // keys: `${saga}::${series}`
+
+  // Default-collapse behavior: collapse all series unless explicitly expanded by the user.
+  // We keep using the existing COLLAPSED set for backwards compatibility.
+  function allSeriesKeysFromBooks(list = books){
+    const set = new Set();
+    for (const b of list){ set.add(seriesKey(b.saga, b.series)); }
+    return set;
+  }
+  function ensureDefaultCollapsedForCurrentBooks(){
+    const stored = localStorage.getItem(LS_KEYS.COLLAPSED);
+    const allKeys = allSeriesKeysFromBooks(books);
+    if (stored == null){
+      // First-time run (no user preference stored): collapse everything by default.
+      collapsedSeries = new Set(allKeys);
+      saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+    } else {
+      // For any new series (e.g., after importing a bigger catalogue), default them to collapsed.
+      let changed = false;
+      for (const key of allKeys){
+        if (!collapsedSeries.has(key)){ collapsedSeries.add(key); changed = true; }
+      }
+      if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+    }
+  }
+  ensureDefaultCollapsedForCurrentBooks();
+
+  // -------------------------------
+  // Rendering (Overview)
+  // -------------------------------
+  const elResults = document.getElementById('results');
+  const tplSeries = document.getElementById('tpl-series');
+  const tplCard   = document.getElementById('tpl-card');
+
+  const elSearch = document.getElementById('search');
+  const elSaga   = document.getElementById('filterSaga');
+  const elSeries = document.getElementById('filterSeries');
+  const elStatus = document.getElementById('filterStatus');
+
+  const elStatTotal = document.getElementById('statTotal');
+  const elStatOwned = document.getElementById('statOwned');
+  const elStatRead  = document.getElementById('statRead');
+  const elStatPct   = document.getElementById('statPct');
+  const elStatBar   = document.getElementById('statBar');
+
+  function uniq(arr){ return [...new Set(arr)]; }
+
+  function applyFilters(allBooks) {
+    const q = elSearch.value?.trim().toLowerCase() || '';
+    const fs = elSaga.value; const fr = elSeries.value; const st = elStatus.value;
+    return allBooks.filter(b => {
+      if (q && !b.title.toLowerCase().includes(q)) return false;
+      if (fs && b.saga !== fs) return false;
+      if (fr && b.series !== fr) return false;
+      if (st === 'owned'   && !owned.has(b.id)) return false;
+      if (st === 'read'    && !read.has(b.id))  return false;
+      if (st === 'unowned' && owned.has(b.id))  return false;
+      if (st === 'unread'  && read.has(b.id))   return false;
+      return true;
+    });
+  }
+
+  function groupBySagaSeries(list){
+    // { [saga]: { [series]: [books...] } }
+    const map = new Map();
+    for (const b of list){
+      if (!map.has(b.saga)) map.set(b.saga, new Map());
+      const sMap = map.get(b.saga);
+      if (!sMap.has(b.series)) sMap.set(b.series, []);
+      sMap.get(b.series).push(b);
+    }
+    // sort inside each series by seriesIndex or number as fallback
+    for (const [, sMap] of map){
+      for (const [series, arr] of sMap){
+        arr.sort((a,b)=> (a.seriesIndex ?? a.number ?? 0) - (b.seriesIndex ?? b.number ?? 0));
+        sMap.set(series, arr);
+      }
+    }
+    return map;
+  }
+
+  function renderFiltersOptions() {
+    // Sagas remain alphabetical
+    const sagas = uniq(books.map(b=>b.saga)).filter(Boolean).sort();
+
+    // Series dropdown: sort by *numerical series order* instead of alphabet.
+    // We infer the series number primarily from the book id pattern `S(\d+)-...`.
+    // Fallback to seriesIndex, then number; unknowns go last.
+    const seriesOrder = new Map(); // name -> min inferred number
+    for (const b of books){
+      const name = b.series || 'Unknown';
+      let num = Number.POSITIVE_INFINITY;
+      const m = String(b.id||'').match(/S(\d+)/i);
+      if (m) num = parseInt(m[1], 10);
+      else if (typeof b.seriesIndex === 'number' && Number.isFinite(b.seriesIndex)) num = b.seriesIndex;
+      else if (typeof b.number === 'number' && Number.isFinite(b.number)) num = b.number;
+      const prev = seriesOrder.get(name);
+      seriesOrder.set(name, Math.min(prev ?? num, num));
+    }
+
+    const seriesNames = [...new Set(books.map(b=>b.series).filter(Boolean))]
+      .sort((a,b)=>{
+        const na = seriesOrder.get(a) ?? Number.MAX_SAFE_INTEGER;
+        const nb = seriesOrder.get(b) ?? Number.MAX_SAFE_INTEGER;
+        if (na !== nb) return na - nb; // ASC by inferred series number
+        return a.localeCompare(b); // tie-break alphabetically
+      });
+
+    // saga options
+    elSaga.innerHTML = '<option value="">All sagas</option>' + sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+    // series options (numerical order)
+    elSeries.innerHTML = '<option value="">All series</option>' + seriesNames.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+  }
+
+  function getSeriesAgg(sagaName, seriesName){
+    const arr = books.filter(b => b.saga === sagaName && b.series === seriesName);
+    const total = arr.length;
+    let own=0, rd=0; for(const b of arr){ if(owned.has(b.id)) own++; if(read.has(b.id)) rd++; }
+    return { total, own, rd, pctOwn: total? Math.round(own/total*100):0, pctRead: total? Math.round(rd/total*100):0 };
+  }
+
+  function seriesKey(saga, series){ return `${saga}::${series}`; }
+
+  function render() {
+    const filtered = applyFilters(books);
+
+    elResults.innerHTML = '';
+    const grouped = groupBySagaSeries(filtered);
+
+    if (!filtered.length){
+      elResults.innerHTML = '<div class="muted text-center">No books match your filters.</div>';
+      return;
+    }
+
+    for (const [saga, seriesMap] of grouped){
+      // Saga heading
+      const sagaBlock = document.createElement('div');
+      sagaBlock.className = 'space-y-4';
+      sagaBlock.innerHTML = `<h2 class=\"text-2xl font-bold\">Saga: ${escapeHtml(saga)}</h2>`;
+
+      for (const [series, items] of seriesMap){
+        const node = tplSeries.content.cloneNode(true);
+        const header = node.querySelector('[data-series-header]');
+        const body   = node.querySelector('[data-series-body]');
+
+        const key = seriesKey(saga, series);
+        const collapsed = collapsedSeries.has(key);
+        const bodyId = 'body-' + btoa(unescape(encodeURIComponent(key))).replace(/[^a-z0-9]/gi,'');
+
+        header.innerHTML = `
+          <div class=\"rounded-t-xl px-4 py-2 header-grad\">
+            <div class=\"flex items-center justify-between\">
+              <h3 class=\"text-lg font-semibold\">Series: ${escapeHtml(series)}</h3>
+              <button type=\"button\" aria-expanded=\"${!collapsed}\" aria-controls=\"${bodyId}\" class=\"inline-flex items-center gap-2 muted hover:text-[color:var(--text)]\" data-toggle>
+                <span class=\"text-sm\">${collapsed ? 'Expand' : 'Collapse'}</span>
+                <svg class=\"chev w-4 h-4\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>
+              </button>
+            </div>
+          </div>`;
+
+        body.id = bodyId;
+        if (collapsed) { body.classList.add('hidden'); header.querySelector('svg').style.transform = 'rotate(-180deg)'; }
+
+        // Toggle interactions
+        const toggleBtn = header.querySelector('[data-toggle]');
+        const toggle = () => {
+          const isHidden = body.classList.toggle('hidden');
+          toggleBtn.setAttribute('aria-expanded', String(!isHidden));
+          toggleBtn.querySelector('span').textContent = isHidden ? 'Expand' : 'Collapse';
+          toggleBtn.querySelector('svg').style.transform = isHidden ? 'rotate(-180deg)' : 'rotate(0deg)';
+          if (isHidden) collapsedSeries.add(key); else collapsedSeries.delete(key);
+          saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+        };
+        toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
+
+        // Per-series mini progress
+        const agg = getSeriesAgg(saga, series);
+        const mini = node.querySelector('[data-series-mini]');
+        mini.innerHTML = `
+          <div class=\"grid sm:grid-cols-2 gap-2 text-sm\">
+            <div>
+              <div class=\"flex justify-between muted\"><span>Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
+              <div class=\"progress-xs progress-track\"><div class=\"progress-xs progress-read\" style=\"width:${agg.pctRead}%\"></div></div>
+            </div>
+            <div>
+              <div class=\"flex justify-between muted\"><span>Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
+              <div class=\"progress-xs progress-track\"><div class=\"progress-xs progress-own\" style=\"width:${agg.pctOwn}%\"></div></div>
+            </div>
+          </div>`;
+
+        const grid = node.querySelector('[data-series-grid]');
+
+        for (const b of items){
+          const card = tplCard.content.cloneNode(true);
+          card.querySelector('[data-title]').textContent = `${b.number ? b.number + '. ' : ''}${b.title}`;
+          card.querySelector('[data-number]').textContent = b.id;
+          const own = card.querySelector('[data-own]');
+          const rd  = card.querySelector('[data-read]');
+          own.checked = owned.has(b.id);
+          rd.checked  = read.has(b.id);
+          own.addEventListener('change', () => { toggleSet(owned, b.id, own.checked); render(); renderStatsTab(); });
+          rd.addEventListener('change',  () => { toggleSet(read,  b.id, rd.checked);  render(); renderStatsTab(); });
+          grid.appendChild(card);
+        }
+        sagaBlock.appendChild(node);
+      }
+      elResults.appendChild(sagaBlock);
+    }
+  }
+
+  function toggleSet(set, id, on){
+    if (on) set.add(id); else set.delete(id);
+    saveJSON(LS_KEYS.OWNED, [...owned]);
+    saveJSON(LS_KEYS.READ,  [...read]);
+  }
+
+  // -------------------------------
+  // Import/Export (books + state)
+  // -------------------------------
+  const btnImportBooks = document.getElementById('btnImportBooks');
+  const btnImportBooksCSV = document.getElementById('btnImportBooksCSV');
+  const btnExportBooks = document.getElementById('btnExportBooks');
+  const btnImportState = document.getElementById('btnImportState');
+  const btnExportState = document.getElementById('btnExportState');
+  const btnClearState  = document.getElementById('btnClearState');
+  const hiddenFile     = document.getElementById('hiddenFile');
+
+  btnImportBooks.addEventListener('click', () => chooseFile('books'));
+  btnImportBooksCSV.addEventListener('click', () => chooseFile('books_csv'));
+  btnImportState.addEventListener('click', () => chooseFile('state'));
+  btnExportBooks.addEventListener('click', () => downloadJSON('beast-quest-books.json', books));
+  btnExportState.addEventListener('click', () => downloadJSON('beast-quest-state.json', { owned:[...owned], read:[...read] }));
+  btnClearState.addEventListener('click', () => {
+    if (!confirm('Clear Owned/Read state?')) return;
+    owned.clear(); read.clear();
+    saveJSON(LS_KEYS.OWNED, [...owned]);
+    saveJSON(LS_KEYS.READ,  [...read]);
+    render();
+    renderStatsTab();
+  });
+
+  function chooseFile(kind){
+    hiddenFile.value = '';
+    // set file type filter for picker
+    if (kind === 'books_csv') hiddenFile.accept = '.csv,text/csv';
+    else hiddenFile.accept = 'application/json,application/JSON,.json';
+    hiddenFile.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        if (kind === 'books') {
+          const parsed = JSON.parse(text);
+          if (!Array.isArray(parsed)) throw new Error('Books JSON must be an array');
+          const normalized = parsed.map(x => ({
+            id: String(x.id),
+            number: Number(x.number ?? 0) || undefined,
+            title: String(x.title ?? '').trim(),
+            saga: String(x.saga ?? '').trim(),
+            series: String(x.series ?? '').trim(),
+            seriesIndex: Number(x.seriesIndex ?? x.number ?? 0) || undefined,
+          })).filter(x => x.id && x.title);
+          if (!normalized.length) throw new Error('No valid books after parsing');
+          books = normalized;
+          saveJSON(LS_KEYS.BOOKS, books);
+          ensureDefaultCollapsedForCurrentBooks();
+          renderFiltersOptions();
+          render();
+          renderStatsTab();
+        } else if (kind === 'books_csv') {
+          const normalized = csvToBooks(text);
+          if (!normalized.length) throw new Error('No valid books after parsing');
+          books = normalized;
+          saveJSON(LS_KEYS.BOOKS, books);
+          ensureDefaultCollapsedForCurrentBooks();
+          renderFiltersOptions();
+          render();
+          renderStatsTab();
+        } else if (kind === 'state') {
+          const parsed = JSON.parse(text);
+          const o = new Set(Array.isArray(parsed.owned) ? parsed.owned : []);
+          const r = new Set(Array.isArray(parsed.read)  ? parsed.read  : []);
+          owned = o; read = r;
+          saveJSON(LS_KEYS.OWNED, [...owned]);
+          saveJSON(LS_KEYS.READ,  [...read]);
+          render();
+          renderStatsTab();
+        }
+      } catch (err) {
+        alert('Import failed: ' + (err?.message || err));
+      }
+    };
+    hiddenFile.click();
+  }
+
+  function downloadJSON(filename, data){
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // -------------------------------
+  // Tabs + Aggregates (Stats tab)
+  // -------------------------------
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  function setTab(targetSel){
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    const target = document.querySelector(targetSel);
+    target.classList.remove('hidden');
+    target.classList.add('block');
+    tabBtns.forEach(b=>{
+      const on = b.getAttribute('data-target')===targetSel;
+      b.setAttribute('aria-selected', on ? 'true':'false');
+      b.classList.toggle('active', on);
+      b.classList.toggle('inactive', !on);
+    });
+  }
+  tabBtns.forEach(b=> b.addEventListener('click', ()=> setTab(b.getAttribute('data-target'))));
+
+  const elSagaStats   = document.getElementById('sagaStats');
+  const elSeriesStats = document.getElementById('seriesStats');
+
+  function aggregateBy(keyFn){
+    const map = new Map();
+    for (const b of books){
+      const key = keyFn(b);
+      if (!map.has(key)) map.set(key, { total:0, owned:0, read:0 });
+      const m = map.get(key);
+      m.total++;
+      if (owned.has(b.id)) m.owned++;
+      if (read.has(b.id))  m.read++;
+    }
+    return map;
+  }
+
+  function renderAggTable(container, map){
+    const rows = [...map.entries()].sort((a,b)=> a[0].localeCompare(b[0])).map(([name, m])=>{
+      const pctRead = m.total ? Math.round((m.read/m.total)*100) : 0;
+      const pctOwn  = m.total ? Math.round((m.owned/m.total)*100) : 0;
+      return `
+      <div class="p-3 border brand-border rounded-lg">
+        <div class="flex justify-between items-center text-sm">
+          <div class="font-medium">${escapeHtml(name)}</div>
+          <div class="text-xs muted">${m.read}/${m.total} read • ${m.owned}/${m.total} owned</div>
+        </div>
+        <div class="mt-2">
+          <div class="text-xs muted">Read ${pctRead}%</div>
+          <div class="progress progress-track"><div class="progress progress-read" style="width:${pctRead}%"></div></div>
+        </div>
+        <div class="mt-2">
+          <div class="text-xs muted">Owned ${pctOwn}%</div>
+          <div class="progress progress-track"><div class="progress progress-own" style="width:${pctOwn}%"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML = rows || '<div class="muted">No data.</div>';
+  }
+
+  // Series ordering helpers for Stats → Per‑Series (numerical DESC, then reversed by request)
+  function computeSeriesOrderMap(){
+    const map = new Map();
+    for (const b of books){
+      const label = (b.saga ? b.saga + ' — ' : '') + (b.series || 'Unknown');
+      const m = String(b.id || '').match(/S([0-9]+)/i);
+      let candidate = Number.POSITIVE_INFINITY;
+      if (m) candidate = parseInt(m[1], 10);
+      else if (typeof b.number === 'number' && !Number.isNaN(b.number)) candidate = b.number;
+      const prev = map.get(label);
+      map.set(label, Math.min(prev ?? candidate, candidate));
+    }
+    for (const [k,v] of map){ if (!Number.isFinite(v)) map.set(k, 0); }
+    return map;
+  }
+
+  function renderSeriesAggTable(container, map){
+    const orderMap = computeSeriesOrderMap();
+    // Keep the existing sort definition, then reverse the whole sequence to satisfy "reverse order"
+    const entries = [...map.entries()]
+      .sort((a,b)=>{
+        const oa = orderMap.get(a[0]) ?? 0;
+        const ob = orderMap.get(b[0]) ?? 0;
+        if (oa !== ob) return ob - oa; // original numerical DESC
+        return a[0].localeCompare(b[0]);
+      })
+      .reverse();
+
+    const rows = entries.map(([name, m])=>{
+      const pctRead = m.total ? Math.round((m.read/m.total)*100) : 0;
+      const pctOwn  = m.total ? Math.round((m.owned/m.total)*100) : 0;
+      return `
+      <div class="p-3 border brand-border rounded-lg">
+        <div class="flex justify-between items-center text-sm">
+          <div class="font-medium">${escapeHtml(name)}</div>
+          <div class="text-xs muted">${m.read}/${m.total} read • ${m.owned}/${m.total} owned</div>
+        </div>
+        <div class="mt-2">
+          <div class="text-xs muted">Read ${pctRead}%</div>
+          <div class="progress progress-track"><div class="progress progress-read" style="width:${pctRead}%"></div></div>
+        </div>
+        <div class="mt-2">
+          <div class="text-xs muted">Owned ${pctOwn}%</div>
+          <div class="progress progress-track"><div class="progress progress-own" style="width:${pctOwn}%"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML = rows || '<div class="muted">No data.</div>';
+  }
+
+  function renderStatsTab(){
+    // Global stats (all books)
+    const total = books.length;
+    let ownedCount = 0, readCount = 0;
+    for (const b of books){
+      if (owned.has(b.id)) ownedCount++;
+      if (read.has(b.id))  readCount++;
+    }
+    const pct = total ? Math.round((readCount/total)*100) : 0;
+    elStatTotal.textContent = String(total);
+    elStatOwned.textContent = String(ownedCount);
+    elStatRead.textContent  = String(readCount);
+    elStatPct.textContent   = pct + '%';
+    elStatBar.style.width   = pct + '%';
+
+    // Aggregates (full dataset)
+    const bySaga   = aggregateBy(b=> b.saga || 'Unknown');
+    const bySeries = aggregateBy(b=> (b.saga? b.saga+ ' — ' : '') + (b.series || 'Unknown'));
+    renderAggTable(elSagaStats, bySaga);
+    renderSeriesAggTable(elSeriesStats, bySeries);
+  }
+
+  // Events: re-render both overview and stats when filters change
+  for (const el of [elSearch, elSaga, elSeries, elStatus]){
+    el.addEventListener('input', () => { render(); renderStatsTab(); });
+    el.addEventListener('change', () => { render(); renderStatsTab(); });
+  }
+
+  // -------------------------------
+  // CSV helpers + tests
+  // -------------------------------
+  function csvToBooks(text){
+    const delim = detectDelimiter(text);
+    const rows = parseCSV(text, delim);
+    if (!rows.length) throw new Error('CSV is empty');
+    const headerRaw = rows.shift();
+    const headerLen = headerRaw.length;
+    if (!headerLen) throw new Error('Header row is empty');
+
+    // 1) Row width validation: every row must have EXACTLY the same number of columns as the header.
+    rows.forEach((r, i) => {
+      if (r.length !== headerLen) {
+        throw new Error(`Row ${i+2} has ${r.length} columns; expected ${headerLen}`);
+      }
+    });
+
+    // 2) Header validation: only allowed columns and synonyms
+    const norm = (h)=> String(h||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'');
+    const headers = headerRaw.map(norm);
+    const allowed = new Set([
+      'id','bookid',
+      'title','name',
+      'number','no','booknumber','bookno','num',
+      'saga',
+      'series',
+      'seriesindex','series_idx','seriesnumber','seriesno','seriesnum','idx'
+    ]);
+    for (const h of headers){
+      if (!allowed.has(h)) throw new Error(`Unknown column: "${h}"`);
+    }
+
+    // 3) Required columns present
+    const find = (names)=>{ for(const n of names){ const i = headers.indexOf(n); if(i!==-1) return i; } return -1; };
+    const idxId     = find(['id','bookid']);
+    const idxTitle  = find(['title','name']);
+    if (idxId === -1 || idxTitle === -1) throw new Error('CSV must include columns: id, title');
+
+    // Optional columns
+    const idxNum    = find(['number','no','booknumber','bookno','num']);
+    const idxSaga   = find(['saga']);
+    const idxSeries = find(['series']);
+    const idxSIdx   = find(['seriesindex','series_idx','seriesnumber','seriesno','seriesnum','idx']);
+
+    const out = [];
+    rows.forEach((row, i) => {
+      const g = (ix)=> (ix>=0 && ix<row.length) ? String(row[ix]).trim() : '';
+      const id    = g(idxId);
+      const title = g(idxTitle);
+      if (!id) throw new Error(`Row ${i+2} has empty id`);
+      if (!title) throw new Error(`Row ${i+2} has empty title`);
+      const saga  = g(idxSaga);
+      const series= g(idxSeries);
+      const nStr  = g(idxNum);
+      const siStr = g(idxSIdx);
+      const number = nStr === '' ? undefined : Number(nStr);
+      const seriesIndex = siStr !== '' ? Number(siStr) : (Number(nStr) || undefined);
+      out.push({
+        id,
+        number: Number.isFinite(number) ? number : undefined,
+        title,
+        saga,
+        series,
+        seriesIndex: Number.isFinite(seriesIndex) ? seriesIndex : undefined,
+      });
+    });
+    return out;
+  }
+
+  function detectDelimiter(text){
+    const sample = text.slice(0, 10000);
+    const lines = sample.split(/\r\n|\n|\r/).slice(0, 10);
+    const cands = [',',';','\t','|'];
+    let best = ',', bestScore = -1;
+    for (const cand of cands){
+      let score = 0;
+      for (const line of lines){
+        let inQ = false, cnt = 0;
+        for (let i=0;i<line.length;i++){
+          const ch = line[i];
+          if (ch === '"'){
+            if (inQ && line[i+1] === '"'){ i++; continue; }
+            inQ = !inQ;
+          } else if (!inQ && ch === cand){ cnt++; }
+        }
+        score += cnt;
+      }
+      if (score > bestScore){ bestScore = score; best = cand; }
+    }
+    return best;
+  }
+
+  function parseCSV(text, delimiter=','){
+    // Strip UTF-8 BOM if present
+    text = text.replace(/^\uFEFF/, '');
+    const rows = [];
+    let row = [], field = '', inQ = false;
+    for (let i=0;i<text.length;i++){
+      const ch = text[i];
+      if (inQ){
+        if (ch === '"'){
+          if (text[i+1] === '"'){ field += '"'; i++; }
+          else { inQ = false; }
+        } else { field += ch; }
+      } else {
+        if (ch === '"'){ inQ = true; }
+        else if (ch === delimiter){ row.push(field); field = ''; }
+        else if (ch === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+        else if (ch === '\r'){
+          if (text[i+1] === '\n'){ i++; }
+          row.push(field); rows.push(row); row = []; field = '';
+        } else { field += ch; }
+      }
+    }
+    if (field.length || row.length){ row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  // Tiny CSV unit tests (console-only; non-blocking)
+  (function runCSVTests(){
+    try{
+      let pass=0; const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+
+      // 1) Comma + quotes + CRLF
+      const t1 = `id,title,number\r\nS01-01,"Hello, World",1\r\n`;
+      const r1 = parseCSV(t1, ',');
+      console.assert(eq(r1, [["id","title","number"],["S01-01","Hello, World","1"]]), 'CSV t1 failed'); pass++;
+
+      // 2) Semicolon
+      const t2 = `id;title;seriesIndex\nA;B;3\n`;
+      const r2 = parseCSV(t2, ';');
+      console.assert(eq(r2, [["id","title","seriesIndex"],["A","B","3"]]), 'CSV t2 failed'); pass++;
+
+      // 3) Tab
+      const t3 = `id\ttitle\nX\t"Y\tZ"\n`;
+      const r3 = parseCSV(t3, '\t');
+      console.assert(eq(r3, [["id","title"],["X","Y\tZ"]]), 'CSV t3 failed'); pass++;
+
+      // 4) Pipe
+      const t4 = `a|b|c\n1|2|3`;
+      const r4 = parseCSV(t4, '|');
+      console.assert(eq(r4, [["a","b","c"],["1","2","3"]]), 'CSV t4 failed'); pass++;
+
+      // 5) Quotes escaping
+      const t5 = `id,title\n1,"He said ""Hi"""`;
+      const r5 = parseCSV(t5, ',');
+      console.assert(eq(r5, [["id","title"],["1","He said \"Hi\""]]), 'CSV t5 failed'); pass++;
+
+      // 6) BOM removal
+      const t6 = `\uFEFFid,title\n1,Ok`;
+      const r6 = parseCSV(t6, ',');
+      console.assert(eq(r6, [["id","title"],["1","Ok"]]), 'CSV t6 failed'); pass++;
+
+      // 7) Reject fewer columns
+      try{ csvToBooks(`id,title\nA`); console.assert(false, 't7 should throw'); } catch(_) { pass++; }
+
+      // 8) Reject extra columns
+      try{ csvToBooks(`id,title\nA,Name,Extra`); console.assert(false, 't8 should throw'); } catch(_) { pass++; }
+
+      // 9) Reject unknown header
+      try{ csvToBooks(`id,title,unknown\nA,Name,X`); console.assert(false, 't9 should throw'); } catch(_) { pass++; }
+
+      // 10) Reject empty id/title
+      try{ csvToBooks(`id,title\n,Name`); console.assert(false, 't10 id empty should throw'); } catch(_) { pass++; }
+      try{ csvToBooks(`id,title\nA,`); console.assert(false, 't10 title empty should throw'); } catch(_) { pass++; }
+
+      // 11) detectDelimiter heuristic checks
+      const d1 = detectDelimiter(`a,b,c\n1,2,3`); console.assert(d1 === ',', 'detectDelimiter comma'); pass++;
+      const d2 = detectDelimiter(`a;b;c\n1;2;3`); console.assert(d2 === ';', 'detectDelimiter semicolon'); pass++;
+
+      console.info(`CSV tests passed: ${pass}`);
+    }catch(e){ console.warn('CSV tests encountered an error (non-fatal):', e); }
+  })();
+
+  // Initial paint
+  renderFiltersOptions();
+  render();
+  renderStatsTab();
+  </script>
+</body>
+</html>
