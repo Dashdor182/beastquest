@@ -76,43 +76,43 @@
     <!-- OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
       <!-- Controls -->
-      <section class=\"panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-6 sticky-toolbar\">
+      <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-6 sticky-toolbar">
         <!-- Collapsible Filters -->
-        <details id=\"filtersCollapse\" class=\"group\">
-          <summary class=\"cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]\">
-            <span class=\"badge\">Filters</span>
+        <details id="filtersCollapse" class="group">
+          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
+            <span class="badge">Filters</span>
             <span>Show / hide search & filters</span>
-            <svg class=\"chev w-4 h-4 transition-transform group-open:rotate-180\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>
+            <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </summary>
-          <div class=\"mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 items-end\">
-            <label class=\"block\">
-              <span class=\"block text-sm font-medium muted\">Search title</span>
-              <input id=\"search\" type=\"text\" placeholder=\"e.g., Ferno, Sea Serpent…\" class=\"mt-1 w-full rounded-lg input\" />
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 items-end">
+            <label class="block">
+              <span class="block text-sm font-medium muted">Search title</span>
+              <input id="search" type="text" placeholder="e.g., Ferno, Sea Serpent…" class="mt-1 w-full rounded-lg input" />
             </label>
 
-            <label class=\"block\">
-              <span class=\"block text-sm font-medium muted\">Saga</span>
-              <select id=\"filterSaga\" class=\"mt-1 w-full rounded-lg input\">
-                <option value=\"\">All sagas</option>
+            <label class="block">
+              <span class="block text-sm font-medium muted">Saga</span>
+              <select id="filterSaga" class="mt-1 w-full rounded-lg input">
+                <option value="">All sagas</option>
               </select>
             </label>
 
-            <label class=\"block\">
-              <span class=\"block text-sm font-medium muted\">Series</span>
-              <select id=\"filterSeries\" class=\"mt-1 w-full rounded-lg input\">
-                <option value=\"\">All series</option>
+            <label class="block">
+              <span class="block text-sm font-medium muted">Series</span>
+              <select id="filterSeries" class="mt-1 w-full rounded-lg input">
+                <option value="">All series</option>
               </select>
             </label>
 
-            <div class=\"flex gap-2\">
-              <label class=\"flex-1\">
-                <span class=\"block text-sm font-medium muted\">Status</span>
-                <select id=\"filterStatus\" class=\"mt-1 w-full rounded-lg input\">
-                  <option value=\"all\">All</option>
-                  <option value=\"owned\">Owned only</option>
-                  <option value=\"read\">Read only</option>
-                  <option value=\"unowned\">Not owned</option>
-                  <option value=\"unread\">Not read</option>
+            <div class="flex gap-2">
+              <label class="flex-1">
+                <span class="block text-sm font-medium muted">Status</span>
+                <select id="filterStatus" class="mt-1 w-full rounded-lg input">
+                  <option value="all">All</option>
+                  <option value="owned">Owned only</option>
+                  <option value="read">Read only</option>
+                  <option value="unowned">Not owned</option>
+                  <option value="unread">Not read</option>
                 </select>
               </label>
             </div>
@@ -120,21 +120,21 @@
         </details>
 
         <!-- Collapsible Tools -->
-        <div class=\"mt-3\">
-          <details id=\"toolsCollapse\" class=\"group\">
-            <summary class=\"cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]\">
-              <span class=\"badge\">Tools</span>
+        <div class="mt-3">
+          <details id="toolsCollapse" class="group">
+            <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
+              <span class="badge">Tools</span>
               <span>Import / Export & Reset</span>
-              <svg class=\"chev w-4 h-4 transition-transform group-open:rotate-180\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>
+              <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </summary>
-            <div class=\"mt-3 flex flex-wrap gap-2\">
-              <button id=\"btnImportBooks\" class=\"btn\">Import Books</button>
-              <button id=\"btnImportBooksCSV\" class=\"btn\">Import Books (CSV)</button>
-              <button id=\"btnExportBooks\" class=\"btn\">Export Books</button>
-              <button id=\"btnImportState\" class=\"btn\">Import State</button>
-              <button id=\"btnExportState\" class=\"btn\">Export State</button>
-              <button id=\"btnClearState\" class=\"btn btn-danger\">Clear State</button>
-              <input id=\"hiddenFile\" type=\"file\" accept=\"application/json\" class=\"hidden\" />
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="btnImportBooks" class="btn">Import Books</button>
+              <button id="btnImportBooksCSV" class="btn">Import Books (CSV)</button>
+              <button id="btnExportBooks" class="btn">Export Books</button>
+              <button id="btnImportState" class="btn">Import State</button>
+              <button id="btnExportState" class="btn">Export State</button>
+              <button id="btnClearState" class="btn btn-danger">Clear State</button>
+              <input id="hiddenFile" type="file" accept="application/json" class="hidden" />
             </div>
           </details>
         </div>
@@ -250,6 +250,7 @@
 
   // Default-collapse behavior: collapse all series unless explicitly expanded by the user.
   // We keep using the existing COLLAPSED set for backwards compatibility.
+  function seriesKey(saga, series){ return `${saga}::${series}`; }
   function allSeriesKeysFromBooks(list = books){
     const set = new Set();
     for (const b of list){ set.add(seriesKey(b.saga, b.series)); }
@@ -371,8 +372,6 @@
     return { total, own, rd, pctOwn: total? Math.round(own/total*100):0, pctRead: total? Math.round(rd/total*100):0 };
   }
 
-  function seriesKey(saga, series){ return `${saga}::${series}`; }
-
   function render() {
     const filtered = applyFilters(books);
 
@@ -388,7 +387,7 @@
       // Saga heading
       const sagaBlock = document.createElement('div');
       sagaBlock.className = 'space-y-4';
-      sagaBlock.innerHTML = `<h2 class=\"text-2xl font-bold\">Saga: ${escapeHtml(saga)}</h2>`;
+      sagaBlock.innerHTML = `<h2 class="text-2xl font-bold">Saga: ${escapeHtml(saga)}</h2>`;
 
       for (const [series, items] of seriesMap){
         const node = tplSeries.content.cloneNode(true);
@@ -400,12 +399,12 @@
         const bodyId = 'body-' + btoa(unescape(encodeURIComponent(key))).replace(/[^a-z0-9]/gi,'');
 
         header.innerHTML = `
-          <div class=\"rounded-t-xl px-4 py-2 header-grad\">
-            <div class=\"flex items-center justify-between\">
-              <h3 class=\"text-lg font-semibold\">Series: ${escapeHtml(series)}</h3>
-              <button type=\"button\" aria-expanded=\"${!collapsed}\" aria-controls=\"${bodyId}\" class=\"inline-flex items-center gap-2 muted hover:text-[color:var(--text)]\" data-toggle>
-                <span class=\"text-sm\">${collapsed ? 'Expand' : 'Collapse'}</span>
-                <svg class=\"chev w-4 h-4\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>
+          <div class="rounded-t-xl px-4 py-2 header-grad">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold">Series: ${escapeHtml(series)}</h3>
+              <button type="button" aria-expanded="${!collapsed}" aria-controls="${bodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-toggle>
+                <span class="text-sm">${collapsed ? 'Expand' : 'Collapse'}</span>
+                <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </button>
             </div>
           </div>`;
@@ -429,14 +428,14 @@
         const agg = getSeriesAgg(saga, series);
         const mini = node.querySelector('[data-series-mini]');
         mini.innerHTML = `
-          <div class=\"grid sm:grid-cols-2 gap-2 text-sm\">
+          <div class="grid sm:grid-cols-2 gap-2 text-sm">
             <div>
-              <div class=\"flex justify-between muted\"><span>Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
-              <div class=\"progress-xs progress-track\"><div class=\"progress-xs progress-read\" style=\"width:${agg.pctRead}%\"></div></div>
+              <div class="flex justify-between muted"><span>Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
+              <div class="progress-xs progress-track"><div class="progress-xs progress-read" style="width:${agg.pctRead}%"></div></div>
             </div>
             <div>
-              <div class=\"flex justify-between muted\"><span>Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
-              <div class=\"progress-xs progress-track\"><div class=\"progress-xs progress-own\" style=\"width:${agg.pctOwn}%\"></div></div>
+              <div class="flex justify-between muted"><span>Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
+              <div class="progress-xs progress-track"><div class="progress-xs progress-own" style="width:${agg.pctOwn}%"></div></div>
             </div>
           </div>`;
 
@@ -477,12 +476,13 @@
   const btnClearState  = document.getElementById('btnClearState');
   const hiddenFile     = document.getElementById('hiddenFile');
 
-  btnImportBooks.addEventListener('click', () => chooseFile('books'));
-  btnImportBooksCSV.addEventListener('click', () => chooseFile('books_csv'));
-  btnImportState.addEventListener('click', () => chooseFile('state'));
-  btnExportBooks.addEventListener('click', () => downloadJSON('beast-quest-books.json', books));
-  btnExportState.addEventListener('click', () => downloadJSON('beast-quest-state.json', { owned:[...owned], read:[...read] }));
-  btnClearState.addEventListener('click', () => {
+  // Guard: only add listeners if buttons exist (in case HTML is modified)
+  if (btnImportBooks) btnImportBooks.addEventListener('click', () => chooseFile('books'));
+  if (btnImportBooksCSV) btnImportBooksCSV.addEventListener('click', () => chooseFile('books_csv'));
+  if (btnImportState) btnImportState.addEventListener('click', () => chooseFile('state'));
+  if (btnExportBooks) btnExportBooks.addEventListener('click', () => downloadJSON('beast-quest-books.json', books));
+  if (btnExportState) btnExportState.addEventListener('click', () => downloadJSON('beast-quest-state.json', { owned:[...owned], read:[...read] }));
+  if (btnClearState) btnClearState.addEventListener('click', () => {
     if (!confirm('Clear Owned/Read state?')) return;
     owned.clear(); read.clear();
     saveJSON(LS_KEYS.OWNED, [...owned]);
@@ -858,17 +858,4 @@
       try{ csvToBooks(`id,title\nA,`); console.assert(false, 't10 title empty should throw'); } catch(_) { pass++; }
 
       // 11) detectDelimiter heuristic checks
-      const d1 = detectDelimiter(`a,b,c\n1,2,3`); console.assert(d1 === ',', 'detectDelimiter comma'); pass++;
-      const d2 = detectDelimiter(`a;b;c\n1;2;3`); console.assert(d2 === ';', 'detectDelimiter semicolon'); pass++;
-
-      console.info(`CSV tests passed: ${pass}`);
-    }catch(e){ console.warn('CSV tests encountered an error (non-fatal):', e); }
-  })();
-
-  // Initial paint
-  renderFiltersOptions();
-  render();
-  renderStatsTab();
-  </script>
-</body>
-</html>
+      const d1 = detectDelimiter(
