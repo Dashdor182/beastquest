@@ -16,7 +16,7 @@ function aggregateBySaga(){
 }
 
 function aggregateSeriesWithinSaga(saga){
-  // Map<seriesLabel, { total, owned, read, order }>
+  // Map<seriesLabel, { total, owned, read, order, idSeed }>
   const map = new Map();
   for (const b of books){
     if (b.saga !== saga) continue;
