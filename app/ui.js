@@ -157,11 +157,12 @@ export function render(onAfterCardHook){
     const sagaBodyId = 'sbody-' + btoa(unescape(encodeURIComponent(String(saga)))).replace(/[^a-z0-9]/gi,'');
     const isSagaCollapsed = collapsedSagas.has(saga);
 
+    // NOTE: per-saga controls wrapper gets `hidden` when collapsed
     sagaSection.innerHTML = `
       <div class="px-4 py-3 rounded-t-xl header-grad saga-sticky">
         <div class="flex items-center justify-between gap-3">
           <h2 class="text-xl sm:text-2xl font-bold">Saga: ${escapeHtml(saga)}</h2>
-          <div class="flex items-center gap-2 text-xs">
+          <div class="flex items-center gap-2 text-xs ${isSagaCollapsed ? 'hidden' : ''}" data-saga-controls>
             <button type="button" class="btn" data-saga-expand-series>Expand series</button>
             <button type="button" class="btn" data-saga-collapse-series>Collapse series</button>
           </div>
@@ -178,18 +179,27 @@ export function render(onAfterCardHook){
     const sagaToggleBtn = sagaSection.querySelector('[data-saga-toggle]');
     const btnExpandSeries = sagaSection.querySelector('[data-saga-expand-series]');
     const btnCollapseSeries = sagaSection.querySelector('[data-saga-collapse-series]');
+    const controlsWrapper = sagaSection.querySelector('[data-saga-controls]');
 
     if (isSagaCollapsed){
       sagaBody.classList.add('hidden');
       sagaToggleBtn.querySelector('svg').style.transform = 'rotate(-180deg)';
+      if (controlsWrapper) controlsWrapper.classList.add('hidden');
     }
+
     sagaToggleBtn.addEventListener('click', (e)=>{
       e.stopPropagation();
       const hidden = sagaBody.classList.toggle('hidden');
       sagaToggleBtn.setAttribute('aria-expanded', String(!hidden));
       sagaToggleBtn.querySelector('span').textContent = hidden ? 'Expand' : 'Collapse';
       sagaToggleBtn.querySelector('svg').style.transform = hidden ? 'rotate(-180deg)' : 'rotate(0deg)';
-      if (hidden) collapsedSagas.add(saga); else collapsedSagas.delete(saga);
+      if (hidden) {
+        collapsedSagas.add(saga);
+        if (controlsWrapper) controlsWrapper.classList.add('hidden');
+      } else {
+        collapsedSagas.delete(saga);
+        if (controlsWrapper) controlsWrapper.classList.remove('hidden');
+      }
       saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
     });
 
