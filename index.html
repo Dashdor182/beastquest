@@ -24,6 +24,7 @@
 
     <!-- OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
+      <!-- Controls -->
       <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-6 sticky-toolbar">
         <!-- Collapsible Filters -->
         <details id="filtersCollapse" class="group">
@@ -37,18 +38,21 @@
               <span class="block text-sm font-medium muted">Search title</span>
               <input id="search" type="text" placeholder="e.g., Ferno, Sea Serpent…" class="mt-1 w-full rounded-lg input" />
             </label>
+
             <label class="block">
               <span class="block text-sm font-medium muted">Saga</span>
               <select id="filterSaga" class="mt-1 w-full rounded-lg input">
                 <option value="">All sagas</option>
               </select>
             </label>
+
             <label class="block">
               <span class="block text-sm font-medium muted">Series</span>
               <select id="filterSeries" class="mt-1 w-full rounded-lg input">
                 <option value="">All series</option>
               </select>
             </label>
+
             <div class="flex gap-2">
               <label class="flex-1">
                 <span class="block text-sm font-medium muted">Status</span>
@@ -90,46 +94,47 @@
     </section>
 
     <!-- STATS TAB -->
-<section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
-  <div class="grid gap-6">
-    <!-- Global stats -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="panel rounded-xl border brand-border p-4 text-center">
-        <div class="text-sm muted">Total Books</div>
-        <div id="statTotal" class="text-3xl font-semibold">0</div>
-      </div>
-      <div class="panel rounded-xl border brand-border p-4 text-center">
-        <div class="text-sm muted">Owned</div>
-        <div id="statOwned" class="text-3xl font-semibold" style="color:var(--accent)">0</div>
-      </div>
-      <div class="panel rounded-xl border brand-border p-4 text-center">
-        <div class="text-sm muted">Read</div>
-        <div id="statRead" class="text-3xl font-semibold" style="color:var(--accent2)">0</div>
-      </div>
-      <div class="panel rounded-xl border brand-border p-4">
-        <div class="flex items-center justify-between text-sm muted"><span>Completion</span><span id="statPct">0%</span></div>
-        <div class="progress mt-2 progress-track">
-          <div id="statBar" class="progress accent" style="width: 0%"></div>
-        </div>
-      </div>
-    </section>
+    <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
+      <div class="grid gap-6">
+        <!-- Global stats -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Total Books</div>
+            <div id="statTotal" class="text-3xl font-semibold">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Owned</div>
+            <div id="statOwned" class="text-3xl font-semibold" style="color:var(--accent)">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Read</div>
+            <div id="statRead" class="text-3xl font-semibold" style="color:var(--accent2)">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4">
+            <div class="flex items-center justify-between text-sm muted"><span>Completion</span><span id="statPct">0%</span></div>
+            <div class="progress mt-2 progress-track">
+              <div id="statBar" class="progress accent" style="width: 0%"></div>
+            </div>
+          </div>
+        </section>
 
-    <!-- Saga breakdown (collapsible sagas; each shows per-series stats when expanded) -->
-    <section class="panel rounded-xl border brand-border shadow-sm">
-      <div class="px-4 py-3 rounded-t-xl header-grad">
-        <h3 class="text-lg font-semibold">Saga Breakdown</h3>
+        <!-- Saga breakdown (collapsible sagas; each shows per-series stats when expanded) -->
+        <section class="panel rounded-xl border brand-border shadow-sm">
+          <div class="px-4 py-3 rounded-t-xl header-grad">
+            <h3 class="text-lg font-semibold">Saga Breakdown</h3>
+          </div>
+          <div class="p-4" id="sagaBreakdown"></div>
+        </section>
       </div>
-      <div class="p-4" id="sagaBreakdown"></div>
     </section>
   </div>
-</section>
-
 
   <!-- Templates -->
   <template id="tpl-series">
     <section class="panel rounded-xl border brand-border shadow-sm">
       <div class="px-4 py-3 rounded-t-xl header-grad" data-series-header></div>
       <div class="p-4" data-series-body>
+        <!-- Per-series mini bars -->
         <div data-series-mini class="mb-3"></div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-series-grid></div>
       </div>
@@ -159,4 +164,3 @@
   <script type="module" src="./app/main.js"></script>
 </body>
 </html>
-
