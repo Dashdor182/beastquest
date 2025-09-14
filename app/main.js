@@ -1,10 +1,13 @@
-// Orchestrates rendering, tabs, filters, and import/export
+// Orchestrates rendering, tabs, filters, import/export, and global expand/collapse
 import {
   LS_KEYS, books, owned, read,
   setBooks, setOwned, setRead,
-  ensureDefaultCollapsedForCurrentBooks, saveJSON
+  ensureDefaultCollapsedForCurrentBooks
 } from './state.js';
-import { render, renderFiltersOptions } from './ui.js';
+import {
+  render, renderFiltersOptions,
+  setAllSagasCollapsed, setAllSeriesCollapsed
+} from './ui.js';
 import { renderStatsTab } from './stats.js';
 
 // ---------- Tabs ----------
@@ -46,6 +49,36 @@ for (const el of [elSearch, elSaga, elSeries, elStatus]){
   el.addEventListener('input', () => { render(handleCardToggle); renderStatsTab(); });
   el.addEventListener('change', () => { render(handleCardToggle); renderStatsTab(); });
 }
+
+// ---------- Global expand/collapse (Overview) ----------
+const btnExpandAll    = document.getElementById('btnExpandAll');
+const btnCollapseAll  = document.getElementById('btnCollapseAll');
+
+if (btnExpandAll) btnExpandAll.addEventListener('click', ()=>{
+  setAllSagasCollapsed(false);
+  setAllSeriesCollapsed(false);
+  render(handleCardToggle);
+});
+
+if (btnCollapseAll) btnCollapseAll.addEventListener('click', ()=>{
+  setAllSagasCollapsed(true);
+  setAllSeriesCollapsed(true);
+  render(handleCardToggle);
+});
+
+// ---------- Global expand/collapse (Stats sagas) ----------
+const btnStatsExpandAll   = document.getElementById('btnStatsExpandAll');
+const btnStatsCollapseAll = document.getElementById('btnStatsCollapseAll');
+
+if (btnStatsExpandAll) btnStatsExpandAll.addEventListener('click', ()=>{
+  setAllSagasCollapsed(false);
+  renderStatsTab();
+});
+
+if (btnStatsCollapseAll) btnStatsCollapseAll.addEventListener('click', ()=>{
+  setAllSagasCollapsed(true);
+  renderStatsTab();
+});
 
 // ---------- Import/Export ----------
 const btnImportBooks     = document.getElementById('btnImportBooks');
