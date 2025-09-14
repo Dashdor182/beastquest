@@ -33,7 +33,7 @@
     <!-- OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
       <!-- Controls -->
-      <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-6 sticky-toolbar">
+      <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-4 sticky-toolbar">
         <!-- Collapsible Filters -->
         <details id="filtersCollapse" class="group">
           <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
@@ -77,6 +77,15 @@
         </details>
       </section>
 
+      <!-- Global expand/collapse tools -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button id="btnExpandAllSagas" class="btn btn-ghost">Expand all sagas</button>
+        <button id="btnCollapseAllSagas" class="btn btn-ghost">Collapse all sagas</button>
+        <span class="muted">•</span>
+        <button id="btnExpandAllSeries" class="btn btn-ghost">Expand all series</button>
+        <button id="btnCollapseAllSeries" class="btn btn-ghost">Collapse all series</button>
+      </div>
+
       <!-- Results container -->
       <div id="results" class="space-y-8"></div>
     </section>
@@ -105,6 +114,12 @@
             </div>
           </div>
         </section>
+
+        <!-- Stats tools -->
+        <div class="flex flex-wrap gap-2">
+          <button id="btnStatsExpandAllSagas" class="btn btn-ghost">Expand all sagas</button>
+          <button id="btnStatsCollapseAllSagas" class="btn btn-ghost">Collapse all sagas</button>
+        </div>
 
         <!-- Direct saga list -->
         <div id="sagaBreakdown" class="grid gap-4"></div>
@@ -140,7 +155,7 @@
   <template id="tpl-series">
     <!-- Extra margin so series blocks aren’t cramped -->
     <section class="panel rounded-xl border brand-border shadow-sm mb-4 sm:mb-6">
-      <div class="px-4 py-3 rounded-t-xl header-grad" data-series-header></div>
+      <div class="px-4 py-3 rounded-t-xl header-grad series-header-click" data-series-header></div>
       <div class="p-4" data-series-body>
         <div data-series-mini class="mb-3"></div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-series-grid></div>
