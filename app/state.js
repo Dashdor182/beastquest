@@ -5,7 +5,7 @@ export const LS_KEYS = {
   OWNED: 'bq:owned',
   READ: 'bq:read',
   COLLAPSED: 'bq:collapsedSeries',
-  COLLAPSED_SAGAS: 'bq:collapsedSagas', // NEW
+  COLLAPSED_SAGAS: 'bq:collapsedSagas',
 };
 
 export function loadJSON(key, fallback) {
@@ -19,20 +19,11 @@ export let books = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
 export let owned = new Set(loadJSON(LS_KEYS.OWNED, []));
 export let read  = new Set(loadJSON(LS_KEYS.READ,  []));
 export let collapsedSeries = new Set(loadJSON(LS_KEYS.COLLAPSED, []));
-export let collapsedSagas  = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, [])); // NEW
+export let collapsedSagas  = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));
 
-export function setBooks(next){
-  books = next;
-  saveJSON(LS_KEYS.BOOKS, books);
-}
-export function setOwned(nextSet){
-  owned = nextSet;
-  saveJSON(LS_KEYS.OWNED, [...owned]);
-}
-export function setRead(nextSet){
-  read = nextSet;
-  saveJSON(LS_KEYS.READ, [...read]);
-}
+export function setBooks(next){ books = next; saveJSON(LS_KEYS.BOOKS, books); }
+export function setOwned(nextSet){ owned = nextSet; saveJSON(LS_KEYS.OWNED, [...owned]); }
+export function setRead(nextSet){ read = nextSet; saveJSON(LS_KEYS.READ, [...read]); }
 
 export function seriesKey(saga, series){ return `${saga}::${series}`; }
 export function allSeriesKeysFromBooks(list = books){
@@ -46,7 +37,7 @@ export function allSagaKeysFromBooks(list = books){
   return set;
 }
 
-/** Collapse all series AND sagas by default on first run; collapse any newly-seen ones after imports. */
+/** Default collapse on first run; add new sagas/series as collapsed after imports. */
 export function ensureDefaultCollapsedForCurrentBooks(){
   // Series
   const allSeries = allSeriesKeysFromBooks(books);
@@ -60,7 +51,7 @@ export function ensureDefaultCollapsedForCurrentBooks(){
     if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
   }
 
-  // Sagas (NEW)
+  // Sagas
   const allSagas = allSagaKeysFromBooks(books);
   const storedSagas = localStorage.getItem(LS_KEYS.COLLAPSED_SAGAS);
   if (storedSagas == null){
@@ -71,4 +62,36 @@ export function ensureDefaultCollapsedForCurrentBooks(){
     for (const s of allSagas){ if (!collapsedSagas.has(s)){ collapsedSagas.add(s); changed = true; } }
     if (changed) saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
   }
+}
+
+/* ---------- Expand/Collapse helpers (persisted) ---------- */
+export function expandAllSagas(){
+  collapsedSagas.clear();
+  saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
+}
+export function collapseAllSagas(){
+  collapsedSagas = new Set(allSagaKeysFromBooks(books));
+  saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
+}
+export function expandAllSeries(){
+  collapsedSeries.clear();
+  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+}
+export function collapseAllSeries(){
+  collapsedSeries = new Set(allSeriesKeysFromBooks(books));
+  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+}
+export function expandAllSeriesInSaga(saga){
+  for (const b of books){
+    if (b.saga !== saga) continue;
+    collapsedSeries.delete(seriesKey(b.saga, b.series));
+  }
+  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+}
+export function collapseAllSeriesInSaga(saga){
+  for (const b of books){
+    if (b.saga !== saga) continue;
+    collapsedSeries.add(seriesKey(b.saga, b.series));
+  }
+  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
 }
