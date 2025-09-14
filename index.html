@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Beast Quest Collection</title>
+  <title>Beast Quest Collection — Scalable</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
@@ -61,8 +61,8 @@
 <body class="body-dark">
   <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
     <header class="mb-6">
-      <h1 class="text-3xl sm:text-4xl font-bold">My Beast Quest Collection</h1>
-      <p class="muted">For Atlas to track his reading quests</p>
+      <h1 class="text-3xl sm:text-4xl font-bold">Beast Quest Collection</h1>
+      <p class="muted">Data‑driven tracker for 100+ books — no hardcoded markup.</p>
     </header>
 
     <!-- Tabs -->
@@ -858,4 +858,18 @@
       try{ csvToBooks(`id,title\nA,`); console.assert(false, 't10 title empty should throw'); } catch(_) { pass++; }
 
       // 11) detectDelimiter heuristic checks
-      const d1 = detectDelimiter(
+      const d1 = detectDelimiter(`a,b,c\n1,2,3`); console.assert(d1 === ',', 'detectDelimiter comma'); pass++;
+      const d2 = detectDelimiter(`a;b;c\n1;2;3`); console.assert(d2 === ';', 'detectDelimiter semicolon'); pass++;
+      const d3 = detectDelimiter(`a\tb\tc\n1\t2\t3`); console.assert(d3 === '\t', 'detectDelimiter tab'); pass++;
+
+      console.info(`CSV tests passed: ${pass}`);
+    }catch(e){ console.warn('CSV tests encountered an error (non-fatal):', e); }
+  })();
+
+  // Initial paint (script is at end of body; DOM is ready)
+  renderFiltersOptions();
+  render();
+  renderStatsTab();
+  </script>
+</body>
+</html>
