@@ -1,7 +1,8 @@
 import {
   LS_KEYS, books, owned, read,
   collapsedSeries, collapsedSagas,
-  saveJSON, seriesKey
+  saveJSON, seriesKey,
+  expandAllSeriesInSaga, collapseAllSeriesInSaga
 } from './state.js';
 
 const elResults = () => document.getElementById('results');
@@ -30,8 +31,8 @@ export function escapeHtml(str){
 const uniq = (arr)=> [...new Set(arr)];
 
 export function applyFilters(list) {
-  const q  = elSearch().value?.trim().toLowerCase() || '';
-  const fs = elSaga().value; const fr = elSeries().value; const st = elStatus().value;
+  const q  = elSearch()?.value?.trim().toLowerCase() || '';
+  const fs = elSaga()?.value; const fr = elSeries()?.value; const st = elStatus()?.value || 'all';
   return list.filter(b => {
     if (q && !b.title.toLowerCase().includes(q)) return false;
     if (fs && b.saga !== fs) return false;
@@ -88,8 +89,8 @@ export function renderFiltersOptions() {
       return a.localeCompare(b);
     });
 
-  elSaga().innerHTML = '<option value="">All sagas</option>' + sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
-  elSeries().innerHTML = '<option value="">All series</option>' + seriesNames.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+  if (elSaga())   elSaga().innerHTML   = '<option value="">All sagas</option>' + sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+  if (elSeries()) elSeries().innerHTML = '<option value="">All series</option>' + seriesNames.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
 }
 
 export function getSeriesAgg(sagaName, seriesName){
@@ -126,14 +127,18 @@ export function render(onAfterCardHook){
     const sagaSection = document.createElement('section');
     sagaSection.className = 'panel rounded-xl border brand-border shadow-sm';
 
-    // Header
+    // Header (sticky within viewport)
     const sagaBodyId = 'sbody-' + btoa(unescape(encodeURIComponent(String(saga)))).replace(/[^a-z0-9]/gi,'');
     const isSagaCollapsed = collapsedSagas.has(saga);
 
     sagaSection.innerHTML = `
-      <div class="px-4 py-3 rounded-t-xl header-grad">
-        <div class="flex items-center justify-between">
+      <div class="px-4 py-3 rounded-t-xl header-grad sticky-saga" data-saga-header>
+        <div class="flex items-center justify-between gap-3 flex-wrap">
           <h2 class="text-xl sm:text-2xl font-bold">Saga: ${escapeHtml(saga)}</h2>
+          <div class="flex items-center gap-2">
+            <button type="button" class="btn btn-ghost" data-saga-expand-series>Expand series</button>
+            <button type="button" class="btn btn-ghost" data-saga-collapse-series>Collapse series</button>
+          </div>
           <button type="button" aria-expanded="${!isSagaCollapsed}" aria-controls="${sagaBodyId}" class="inline-flex items-center gap-2 muted hover:text-[color:var(--text)]" data-saga-toggle>
             <span class="text-sm">${isSagaCollapsed ? 'Expand' : 'Collapse'}</span>
             <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -143,12 +148,23 @@ export function render(onAfterCardHook){
       <div class="p-4" id="${sagaBodyId}"></div>
     `;
 
+    const sagaHeader = sagaSection.querySelector('[data-saga-header]');
     const sagaBody = sagaSection.querySelector('#' + sagaBodyId);
     const sagaToggleBtn = sagaSection.querySelector('[data-saga-toggle]');
+    const expandSeriesBtn = sagaSection.querySelector('[data-saga-expand-series]');
+    const collapseSeriesBtn = sagaSection.querySelector('[data-saga-collapse-series]');
+
     if (isSagaCollapsed){
       sagaBody.classList.add('hidden');
       sagaToggleBtn.querySelector('svg').style.transform = 'rotate(-180deg)';
     }
+
+    // Entire saga header toggles collapse (except clicking the series expand/collapse buttons)
+    sagaHeader.addEventListener('click', (e)=>{
+      if (e.target.closest('[data-saga-expand-series], [data-saga-collapse-series], button[data-toggle]')) return;
+      sagaToggleBtn.click();
+    });
+
     sagaToggleBtn.addEventListener('click', (e)=>{
       e.stopPropagation();
       const hidden = sagaBody.classList.toggle('hidden');
@@ -158,6 +174,10 @@ export function render(onAfterCardHook){
       if (hidden) collapsedSagas.add(saga); else collapsedSagas.delete(saga);
       saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
     });
+
+    // Per-saga expand/collapse all series
+    expandSeriesBtn.addEventListener('click', (e)=>{ e.stopPropagation(); expandAllSeriesInSaga(saga); render(onAfterCardHook); });
+    collapseSeriesBtn.addEventListener('click', (e)=>{ e.stopPropagation(); collapseAllSeriesInSaga(saga); render(onAfterCardHook); });
 
     // Add all series inside saga body (each series remains independently collapsible)
     for (const [series, items] of seriesMap){
@@ -188,7 +208,7 @@ export function render(onAfterCardHook){
       body.id = bodyId;
       if (collapsed) { body.classList.add('hidden'); header.querySelector('svg').style.transform = 'rotate(-180deg)'; }
 
-      // Toggle interactions
+      // Toggle interactions (button)
       const toggleBtn = header.querySelector('[data-toggle]');
       const toggle = () => {
         const isHidden = body.classList.toggle('hidden');
@@ -199,6 +219,12 @@ export function render(onAfterCardHook){
         saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
       };
       toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
+
+      // Make entire series header clickable to toggle
+      header.addEventListener('click', (e)=>{
+        if (e.target.closest('[data-toggle]')) return;
+        toggle();
+      });
 
       // Per-series mini progress
       const agg = getSeriesAgg(saga, series);
