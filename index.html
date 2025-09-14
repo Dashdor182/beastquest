@@ -90,44 +90,40 @@
     </section>
 
     <!-- STATS TAB -->
-    <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
-      <div class="grid gap-6">
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="panel rounded-xl border brand-border p-4 text-center">
-            <div class="text-sm muted">Total Books</div>
-            <div id="statTotal" class="text-3xl font-semibold">0</div>
-          </div>
-          <div class="panel rounded-xl border brand-border p-4 text-center">
-            <div class="text-sm muted">Owned</div>
-            <div id="statOwned" class="text-3xl font-semibold" style="color:var(--accent)">0</div>
-          </div>
-          <div class="panel rounded-xl border brand-border p-4 text-center">
-            <div class="text-sm muted">Read</div>
-            <div id="statRead" class="text-3xl font-semibold" style="color:var(--accent2)">0</div>
-          </div>
-          <div class="panel rounded-xl border brand-border p-4">
-            <div class="flex items-center justify-between text-sm muted"><span>Completion</span><span id="statPct">0%</span></div>
-            <div class="progress mt-2 progress-track">
-              <div id="statBar" class="progress accent" style="width: 0%"></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel rounded-xl border brand-border shadow-sm">
-          <div class="px-4 py-3 rounded-t-xl header-grad">
-            <h3 class="text-lg font-semibold">Per-Saga Progress</h3>
-          </div>
-          <div class="p-4" id="sagaStats"></div>
-        </section>
-        <section class="panel rounded-xl border brand-border shadow-sm">
-          <div class="px-4 py-3 rounded-t-xl header-grad">
-            <h3 class="text-lg font-semibold">Per-Series Progress</h3>
-          </div>
-          <div class="p-4" id="seriesStats"></div>
-        </section>
+<section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
+  <div class="grid gap-6">
+    <!-- Global stats -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="panel rounded-xl border brand-border p-4 text-center">
+        <div class="text-sm muted">Total Books</div>
+        <div id="statTotal" class="text-3xl font-semibold">0</div>
+      </div>
+      <div class="panel rounded-xl border brand-border p-4 text-center">
+        <div class="text-sm muted">Owned</div>
+        <div id="statOwned" class="text-3xl font-semibold" style="color:var(--accent)">0</div>
+      </div>
+      <div class="panel rounded-xl border brand-border p-4 text-center">
+        <div class="text-sm muted">Read</div>
+        <div id="statRead" class="text-3xl font-semibold" style="color:var(--accent2)">0</div>
+      </div>
+      <div class="panel rounded-xl border brand-border p-4">
+        <div class="flex items-center justify-between text-sm muted"><span>Completion</span><span id="statPct">0%</span></div>
+        <div class="progress mt-2 progress-track">
+          <div id="statBar" class="progress accent" style="width: 0%"></div>
+        </div>
       </div>
     </section>
+
+    <!-- Saga breakdown (collapsible sagas; each shows per-series stats when expanded) -->
+    <section class="panel rounded-xl border brand-border shadow-sm">
+      <div class="px-4 py-3 rounded-t-xl header-grad">
+        <h3 class="text-lg font-semibold">Saga Breakdown</h3>
+      </div>
+      <div class="p-4" id="sagaBreakdown"></div>
+    </section>
   </div>
+</section>
+
 
   <!-- Templates -->
   <template id="tpl-series">
@@ -163,3 +159,4 @@
   <script type="module" src="./app/main.js"></script>
 </body>
 </html>
+
