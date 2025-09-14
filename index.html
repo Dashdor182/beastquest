@@ -32,9 +32,8 @@
 
     <!-- OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
-      <!-- Controls -->
+      <!-- Filters (sticky) -->
       <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-4 sticky-toolbar">
-        <!-- Collapsible Filters -->
         <details id="filtersCollapse" class="group">
           <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
             <span class="badge">Filters</span>
@@ -75,16 +74,13 @@
             </div>
           </div>
         </details>
-      </section>
 
-      <!-- Global expand/collapse tools -->
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button id="btnExpandAllSagas" class="btn btn-ghost">Expand all sagas</button>
-        <button id="btnCollapseAllSagas" class="btn btn-ghost">Collapse all sagas</button>
-        <span class="muted">•</span>
-        <button id="btnExpandAllSeries" class="btn btn-ghost">Expand all series</button>
-        <button id="btnCollapseAllSeries" class="btn btn-ghost">Collapse all series</button>
-      </div>
+        <!-- Global expand/collapse controls (Overview) -->
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button id="btnExpandAll" class="btn">Expand all (sagas & series)</button>
+          <button id="btnCollapseAll" class="btn">Collapse all (sagas & series)</button>
+        </div>
+      </section>
 
       <!-- Results container -->
       <div id="results" class="space-y-8"></div>
@@ -115,10 +111,10 @@
           </div>
         </section>
 
-        <!-- Stats tools -->
-        <div class="flex flex-wrap gap-2">
-          <button id="btnStatsExpandAllSagas" class="btn btn-ghost">Expand all sagas</button>
-          <button id="btnStatsCollapseAllSagas" class="btn btn-ghost">Collapse all sagas</button>
+        <!-- Global expand/collapse controls (Stats) -->
+        <div class="flex flex-wrap gap-2 justify-end">
+          <button id="btnStatsExpandAll" class="btn">Expand all sagas</button>
+          <button id="btnStatsCollapseAll" class="btn">Collapse all sagas</button>
         </div>
 
         <!-- Direct saga list -->
@@ -126,7 +122,7 @@
       </div>
     </section>
 
-    <!-- SETTINGS TAB -->
+    <!-- SETTINGS TAB (unchanged except moved earlier) -->
     <section id="tab-settings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabSettings">
       <div class="grid gap-6">
         <section class="panel rounded-xl border brand-border shadow-sm">
