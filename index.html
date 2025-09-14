@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Beast Quest Collection</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="body-dark">
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <header class="mb-6">
+      <h1 class="text-3xl sm:text-4xl font-bold">My Beast Quest Collection</h1>
+      <p class="muted">For Atlas to track his reading quests</p>
+    </header>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b brand-border">
+      <nav class="-mb-px flex gap-2 overflow-x-auto no-scrollbar" role="tablist">
+        <button id="tabOverview" class="tab-btn active" data-target="#tab-overview" aria-selected="true">Overview</button>
+        <button id="tabStats" class="tab-btn inactive" data-target="#tab-stats" aria-selected="false">Stats</button>
+      </nav>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
+      <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-6 sticky-toolbar">
+        <!-- Collapsible Filters -->
+        <details id="filtersCollapse" class="group">
+          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
+            <span class="badge">Filters</span>
+            <span>Show / hide search & filters</span>
+            <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </summary>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 items-end">
+            <label class="block">
+              <span class="block text-sm font-medium muted">Search title</span>
+              <input id="search" type="text" placeholder="e.g., Ferno, Sea Serpent…" class="mt-1 w-full rounded-lg input" />
+            </label>
+            <label class="block">
+              <span class="block text-sm font-medium muted">Saga</span>
+              <select id="filterSaga" class="mt-1 w-full rounded-lg input">
+                <option value="">All sagas</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-sm font-medium muted">Series</span>
+              <select id="filterSeries" class="mt-1 w-full rounded-lg input">
+                <option value="">All series</option>
+              </select>
+            </label>
+            <div class="flex gap-2">
+              <label class="flex-1">
+                <span class="block text-sm font-medium muted">Status</span>
+                <select id="filterStatus" class="mt-1 w-full rounded-lg input">
+                  <option value="all">All</option>
+                  <option value="owned">Owned only</option>
+                  <option value="read">Read only</option>
+                  <option value="unowned">Not owned</option>
+                  <option value="unread">Not read</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <!-- Collapsible Tools -->
+        <div class="mt-3">
+          <details id="toolsCollapse" class="group">
+            <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
+              <span class="badge">Tools</span>
+              <span>Import / Export & Reset</span>
+              <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="btnImportBooks" class="btn">Import Books</button>
+              <button id="btnImportBooksCSV" class="btn">Import Books (CSV)</button>
+              <button id="btnExportBooks" class="btn">Export Books</button>
+              <button id="btnImportState" class="btn">Import State</button>
+              <button id="btnExportState" class="btn">Export State</button>
+              <button id="btnClearState" class="btn btn-danger">Clear State</button>
+              <input id="hiddenFile" type="file" class="hidden" />
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- Results container -->
+      <div id="results" class="space-y-8"></div>
+    </section>
+
+    <!-- STATS TAB -->
+    <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
+      <div class="grid gap-6">
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Total Books</div>
+            <div id="statTotal" class="text-3xl font-semibold">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Owned</div>
+            <div id="statOwned" class="text-3xl font-semibold" style="color:var(--accent)">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4 text-center">
+            <div class="text-sm muted">Read</div>
+            <div id="statRead" class="text-3xl font-semibold" style="color:var(--accent2)">0</div>
+          </div>
+          <div class="panel rounded-xl border brand-border p-4">
+            <div class="flex items-center justify-between text-sm muted"><span>Completion</span><span id="statPct">0%</span></div>
+            <div class="progress mt-2 progress-track">
+              <div id="statBar" class="progress accent" style="width: 0%"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel rounded-xl border brand-border shadow-sm">
+          <div class="px-4 py-3 rounded-t-xl header-grad">
+            <h3 class="text-lg font-semibold">Per-Saga Progress</h3>
+          </div>
+          <div class="p-4" id="sagaStats"></div>
+        </section>
+        <section class="panel rounded-xl border brand-border shadow-sm">
+          <div class="px-4 py-3 rounded-t-xl header-grad">
+            <h3 class="text-lg font-semibold">Per-Series Progress</h3>
+          </div>
+          <div class="p-4" id="seriesStats"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <!-- Templates -->
+  <template id="tpl-series">
+    <section class="panel rounded-xl border brand-border shadow-sm">
+      <div class="px-4 py-3 rounded-t-xl header-grad" data-series-header></div>
+      <div class="p-4" data-series-body>
+        <div data-series-mini class="mb-3"></div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-series-grid></div>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-card">
+    <article class="card rounded-lg border brand-border p-3 sm:p-4">
+      <div class="flex items-start justify-between gap-3">
+        <h4 class="font-medium" data-title></h4>
+        <span class="badge" data-number></span>
+      </div>
+      <div class="mt-3 flex items-center gap-4">
+        <label class="inline-flex items-center gap-2">
+          <input type="checkbox" data-own class="h-6 w-6 sm:h-5 sm:w-5 rounded brand-border" style="accent-color: var(--accent)">
+          <span>Own</span>
+        </label>
+        <label class="inline-flex items-center gap-2">
+          <input type="checkbox" data-read class="h-6 w-6 sm:h-5 sm:w-5 rounded brand-border" style="accent-color: var(--accent2)">
+          <span>Read</span>
+        </label>
+      </div>
+    </article>
+  </template>
+
+  <!-- App bootstrap -->
+  <script type="module" src="./app/main.js"></script>
+</body>
+</html>
