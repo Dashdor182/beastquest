@@ -245,9 +245,30 @@ export function render(onAfterCardHook){
       sHeader.setAttribute('aria-controls', sBodyId);
       sHeader.setAttribute('aria-expanded', String(!isSeriesCollapsed));
 
-      // per-series mini progress (bars for Read & Owned)
+      // RIGHT SIDE: bring back explicit "Expand / Collapse" control with chevron
+      const actionText = isSeriesCollapsed ? 'Expand' : 'Collapse';
+      sHeader.innerHTML = `
+        <h3 class="text-base sm:text-lg font-semibold">Series ${seriesNum || ''}: ${escapeHtml(series)}</h3>
+        <div class="inline-flex items-center gap-2 text-sm muted" data-series-toggle-visual>
+          <span>${actionText}</span>
+          <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+      `;
+      // initial chevron orientation
+      const visual = sHeader.querySelector('[data-series-toggle-visual]');
+      const chevron = visual?.querySelector('svg');
+      if (chevron && isSeriesCollapsed) chevron.style.transform = 'rotate(-180deg)';
+
+      const sBody = document.createElement('div');
+      sBody.id = sBodyId;
+      sBody.dataset.seriesBody = '1';
+      sBody.className = `p-4 panel rounded-b-xl ${isSeriesCollapsed ? 'hidden' : ''}`;
+
+      // per-series mini progress (bars for Read & Owned) shown above grid
       const agg = getSeriesAgg(saga, series);
-      const miniBars = `
+      const miniWrap = document.createElement('div');
+      miniWrap.className = 'mb-3';
+      miniWrap.innerHTML = `
         <div class="grid sm:grid-cols-2 gap-2 text-sm">
           <div>
             <div class="flex justify-between muted"><span>Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
@@ -258,21 +279,6 @@ export function render(onAfterCardHook){
             <div class="progress progress-track"><div class="progress progress-own" style="width:${agg.pctOwn}%"></div></div>
           </div>
         </div>`;
-
-      sHeader.innerHTML = `
-        <h3 class="text-base sm:text-lg font-semibold">Series ${seriesNum || ''}: ${escapeHtml(series)}</h3>
-        <span class="badge">${escapeHtml(sKey)}</span>
-      `;
-
-      const sBody = document.createElement('div');
-      sBody.id = sBodyId;
-      sBody.dataset.seriesBody = '1';
-      sBody.className = `p-4 panel rounded-b-xl ${isSeriesCollapsed ? 'hidden' : ''}`;
-
-      // mini bars show above the grid within the body
-      const miniWrap = document.createElement('div');
-      miniWrap.className = 'mb-3';
-      miniWrap.innerHTML = miniBars;
       sBody.appendChild(miniWrap);
 
       const grid = document.createElement('div');
@@ -320,12 +326,20 @@ export function render(onAfterCardHook){
         });
       }
 
-      // wire series toggle
+      // wire series toggle (updates label + chevron too)
       const toggleSeries = ()=>{
         const nowHidden = sBody.classList.toggle('hidden');
         sHeader.setAttribute('aria-expanded', String(!nowHidden));
         if (nowHidden) collapsedSeries.add(sKey); else collapsedSeries.delete(sKey);
         saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+
+        const vis = sHeader.querySelector('[data-series-toggle-visual]');
+        if (vis){
+          const span = vis.querySelector('span');
+          const svg  = vis.querySelector('svg');
+          if (span) span.textContent = nowHidden ? 'Expand' : 'Collapse';
+          if (svg)  svg.style.transform = nowHidden ? 'rotate(-180deg)' : 'rotate(0deg)';
+        }
       };
       sHeader.addEventListener('click', toggleSeries);
       sHeader.addEventListener('keydown', (e)=>{ if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleSeries(); }});
