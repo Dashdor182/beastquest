@@ -3,8 +3,7 @@ import { books, owned, read } from './state.js';
 import { escapeHtml } from './ui.js';
 
 /**
- * Asset configuration for PNGs.
- * Locked badges use CSS grayscale (no "-locked.png" files needed).
+ * PNG assets; locked variants not used (grayscale via CSS).
  */
 const BADGE_ASSETS = {
   BASE: './assets/achievements',
@@ -12,7 +11,7 @@ const BADGE_ASSETS = {
   USE_LOCKED_VARIANTS: false,
 };
 
-// Where we remember which achievements are already unlocked (to avoid repeat toasts)
+// Persist which achievements are unlocked so we can toast only new ones
 const ACH_UNLOCKED_KEY = 'bq:achUnlocked';
 
 // Themed names for thresholds
@@ -43,7 +42,8 @@ export function renderAchievementsTab(){
   const grid = document.getElementById('achGrid');
   if (!grid) return;
 
-  // Ensure a responsive, dense grid: 2 cols on mobile, more on larger screens
+  // dense, responsive grid
+  grid.className = '';
   grid.classList.add(
     'grid',
     'gap-2', 'sm:gap-3',
@@ -57,10 +57,9 @@ export function renderAchievementsTab(){
   const readCount = read.size;
   const ownedCount = owned.size;
 
-  // ---------- Core milestone badges ----------
   const items = [];
 
-  // Read milestones
+  // --- Read milestones ---
   for (const t of THRESHOLDS){
     items.push({
       id: `read-${t}`,
@@ -72,7 +71,7 @@ export function renderAchievementsTab(){
     });
   }
 
-  // Owned milestones
+  // --- Owned milestones ---
   for (const t of THRESHOLDS){
     items.push({
       id: `own-${t}`,
@@ -84,57 +83,12 @@ export function renderAchievementsTab(){
     });
   }
 
-  // ---------- Extra global badges ----------
-  items.push(
-    {
-      id:'read-50pct', group:'Read', label:'Halfway There — Read ≥ 50%', slug:'read-50pct',
-      achieved: total ? (readCount / total >= 0.5) : false,
-      progressText: `${readCount}/${total || 0}`
-    },
-    {
-      id:'read-75pct', group:'Read', label:'Three Quarters — Read ≥ 75%', slug:'read-75pct',
-      achieved: total ? (readCount / total >= 0.75) : false,
-      progressText: `${readCount}/${total || 0}`
-    },
-    {
-      id:'own-50pct', group:'Owned', label:"Collector’s Majority — Own ≥ 50%", slug:'own-50pct',
-      achieved: total ? (ownedCount / total >= 0.5) : false,
-      progressText: `${ownedCount}/${total || 0}`
-    },
-    {
-      id:'double-mastery', group:'Mastery', label:'Double Mastery — Own & Read 100%', slug:'double-mastery',
-      achieved: total ? (readCount === total && ownedCount === total) : false,
-      progressText: `${readCount}/${total}`
-    },
-    {
-      id:'first-read', group:'Firsts', label:'First Steps — First book read', slug:'first-read',
-      achieved: readCount >= 1, progressText: `${readCount}/1`
-    },
-    {
-      id:'first-owned', group:'Firsts', label:'First Find — First book owned', slug:'first-owned',
-      achieved: ownedCount >= 1, progressText: `${ownedCount}/1`
-    },
-    {
-      id:'first-six', group:'Read', label:'All First Six — Read #1–6', slug:'first-six',
-      achieved: haveReadNumbers([1,2,3,4,5,6]), progressText: progressNumbers([1,2,3,4,5,6])
-    }
-  );
-
-  // ---------- Per-series badges ----------
+  // --- Series Finisher (per series) ---
   const bySeries = aggregateBySeries();
-  let anyOwnAllSeries = false;
-  let anyPerfectSeries = false;
-
   for (const [key, info] of bySeries){
-    const { saga, series, total: t, readCount: r, ownedCount: o } = info;
+    const { saga, series, total: t, readCount: r } = info;
     if (!t) continue;
     const readAll = (r === t);
-    const ownAll  = (o === t);
-    const perfect = readAll && ownAll;
-
-    if (ownAll) anyOwnAllSeries = true;
-    if (perfect) anyPerfectSeries = true;
-
     items.push({
       id: `series-finish:${key}`,
       group: 'Series',
@@ -145,18 +99,7 @@ export function renderAchievementsTab(){
     });
   }
 
-  items.push(
-    {
-      id: 'gap-hunter', group:'Owned', label:'Gap Hunter — Own all books in any series', slug:'gap-hunter',
-      achieved: anyOwnAllSeries, progressText: anyOwnAllSeries ? '1/1' : '0/1'
-    },
-    {
-      id: 'perfect-series', group:'Mastery', label:'Perfect Series — Own & read all books in a series', slug:'perfect-series',
-      achieved: anyPerfectSeries, progressText: anyPerfectSeries ? '1/1' : '0/1'
-    }
-  );
-
-  // ---------- Per-saga badges ----------
+  // --- Saga Conqueror (per saga) ---
   const bySaga = aggregateBySaga();
   for (const [saga, info] of bySaga){
     const { total: t, readCount: r } = info;
@@ -171,30 +114,26 @@ export function renderAchievementsTab(){
     });
   }
 
-  // ---------- Unlock detection & toasts ----------
+  // --- Unlock detection & toasts ---
   const prevRaw = localStorage.getItem(ACH_UNLOCKED_KEY);
   const firstRun = prevRaw == null;
   const prev = new Set(prevRaw ? JSON.parse(prevRaw) : []);
   const currentUnlocked = items.filter(i => i.achieved).map(i => i.id);
   const newly = currentUnlocked.filter(id => !prev.has(id));
-
-  // Save current unlocked set immediately to avoid duplicate toasts if re-rendered quickly
   localStorage.setItem(ACH_UNLOCKED_KEY, JSON.stringify(currentUnlocked));
 
-  // Only toast if not the very first run
   if (!firstRun && newly.length){
     for (const id of newly){
       const it = items.find(x => x.id === id);
       if (!it) continue;
-      const { src } = badgeSrc(it.slug, true); // use coloured image
+      const { src } = badgeSrc(it.slug, true);
       showAchievementToast({ title: 'Achievement unlocked!', label: it.label, src });
     }
-    // gentle haptic on supported devices
-    try { if (navigator?.vibrate) navigator.vibrate(10); } catch {}
+    try { navigator?.vibrate?.(10); } catch {}
   }
 
-  // ---------- Sort & render ----------
-  const order = ['Mastery','Read','Owned','Series','Saga','Firsts'];
+  // --- Sort & render ---
+  const order = ['Read','Owned','Series','Saga'];
   items.sort((a,b)=>{
     const ga = order.indexOf(a.group); const gb = order.indexOf(b.group);
     if (ga !== gb) return ga - gb;
@@ -207,14 +146,10 @@ export function renderAchievementsTab(){
   const html = items.map(it => {
     const { src } = badgeSrc(it.slug, it.achieved);
     const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.8);';
-
     const sub = it.achieved
       ? '<span class="badge">Unlocked</span>'
       : `<span class="muted text-[11px]">${escapeHtml(it.progressText)}</span>`;
-
     const fallback = fallbackDataUrl();
-
-    // Compact card on phones
     return `
       <div class="panel rounded-xl border brand-border p-2 sm:p-3 text-center flex flex-col items-center gap-1 sm:gap-2">
         <img
@@ -236,14 +171,13 @@ export function renderAchievementsTab(){
   grid.innerHTML = html || '<div class="muted">No achievements configured.</div>';
 }
 
-/* ---------------- Toast (local, no external deps) ---------------- */
+/* ---------------- Toast ---------------- */
 
 function showAchievementToast({ title, label, src }){
   let root = document.getElementById('achToastRoot');
   if (!root){
     root = document.createElement('div');
     root.id = 'achToastRoot';
-    // Centered on mobile, bottom-right on larger screens
     root.className = 'fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 sm:items-end sm:pr-4 pointer-events-none';
     root.setAttribute('role', 'status');
     root.setAttribute('aria-live', 'polite');
@@ -273,13 +207,9 @@ function showAchievementToast({ title, label, src }){
   };
 
   el.querySelector('button')?.addEventListener('click', dismiss);
-
-  // Auto-dismiss after 4s
   setTimeout(dismiss, 4000);
 
-  // mount (newest on top)
   root.prepend(el);
-  // enter animation
   requestAnimationFrame(()=>{
     el.style.opacity = '1';
     el.style.transform = 'translateY(0)';
@@ -301,50 +231,40 @@ function badgeSrc(baseSlug, achieved){
   return { src: `${base}/${baseSlug}${ext}`, usesLockedVariant: false };
 }
 
+// Only the slugs we still use
 function priorityOfSlug(slug){
   if (/^(read|own)-(5|10|25|50|100|200|all)$/.test(slug)){
     const order = ['5','10','25','50','100','200','all'];
     const key = slug.split('-')[1];
     return order.indexOf(key);
   }
-  if (slug === 'read-50pct') return 10;
-  if (slug === 'read-75pct') return 11;
-  if (slug === 'own-50pct')  return 12;
-  if (slug === 'double-mastery') return 20;
-  if (slug === 'first-read') return 30;
-  if (slug === 'first-owned') return 31;
-  if (slug === 'first-six') return 32;
   if (slug === 'series-finish') return 40;
-  if (slug === 'saga-conquer') return 50;
-  if (slug === 'gap-hunter') return 60;
-  if (slug === 'perfect-series') return 61;
+  if (slug === 'saga-conquer')  return 50;
   return 99;
 }
 
 function aggregateBySeries(){
-  // key => { saga, series, total, readCount, ownedCount }
+  // key => { saga, series, total, readCount }
   const map = new Map();
   for (const b of books){
     const key = `${b.saga}::${b.series}`;
-    if (!map.has(key)) map.set(key, { saga:b.saga, series:b.series, total:0, readCount:0, ownedCount:0 });
+    if (!map.has(key)) map.set(key, { saga:b.saga, series:b.series, total:0, readCount:0 });
     const m = map.get(key);
     m.total++;
     if (read.has(b.id)) m.readCount++;
-    if (owned.has(b.id)) m.ownedCount++;
   }
   return map;
 }
 
 function aggregateBySaga(){
-  // saga => { total, readCount, ownedCount }
+  // saga => { total, readCount }
   const map = new Map();
   for (const b of books){
     const key = b.saga || 'Unknown';
-    if (!map.has(key)) map.set(key, { total:0, readCount:0, ownedCount:0 });
+    if (!map.has(key)) map.set(key, { total:0, readCount:0 });
     const m = map.get(key);
     m.total++;
     if (read.has(b.id)) m.readCount++;
-    if (owned.has(b.id)) m.ownedCount++;
   }
   return map;
 }
@@ -353,28 +273,7 @@ function seriesTitle(saga, series){
   return `${saga ? saga + ' — ' : ''}${series || 'Unknown Series'}`;
 }
 
-function haveReadNumbers(nums){
-  const needed = new Set(nums);
-  const readNums = new Set();
-  for (const b of books){
-    if (Number.isFinite(b.number) && read.has(b.id)){
-      if (needed.has(b.number)) readNums.add(b.number);
-    }
-  }
-  for (const n of needed){ if (!readNums.has(n)) return false; }
-  return nums.length > 0;
-}
-
-function progressNumbers(nums){
-  let have = 0;
-  for (const b of books){
-    if (Number.isFinite(b.number) && read.has(b.id) && nums.includes(b.number)) have++;
-  }
-  return `${have}/${nums.length}`;
-}
-
 function fallbackDataUrl(){
-  // tiny neutral medal SVG as data URL (fine alongside PNG assets)
   const svg = `
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
       <defs>
