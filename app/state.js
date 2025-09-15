@@ -6,6 +6,7 @@ export const LS_KEYS = {
   READ: 'bq:read',
   COLLAPSED: 'bq:collapsedSeries',       // keys: `${saga}::${series}`
   COLLAPSED_SAGAS: 'bq:collapsedSagas',  // values: 'saga name'
+  ACH_UNLOCKED: 'bq:achievementsUnlocked', // NEW: store unlocked achievement IDs
 };
 
 // Tiny starter dataset (replace via Import later)
@@ -48,9 +49,8 @@ export function allSagaNamesFromBooks(list = books){
 
 /**
  * Default-collapse behavior:
- * - On first run (no prior state), collapse **all sagas and all series**.
- * - On subsequent runs/imports, any **new** saga/series gets added as collapsed by default.
- *   (We never expand something the user previously chose to keep collapsed.)
+ * - First run: collapse all sagas & all series.
+ * - Imports/new data: any new saga/series defaults to collapsed.
  */
 export function ensureDefaultCollapsedForCurrentBooks(){
   const allSeriesKeys = allSeriesKeysFromBooks(books);
@@ -59,7 +59,7 @@ export function ensureDefaultCollapsedForCurrentBooks(){
   // SERIES
   let changedSeries = false;
   if (!localStorage.getItem(LS_KEYS.COLLAPSED)){
-    collapsedSeries = new Set(allSeriesKeys);                 // collapse ALL by default
+    collapsedSeries = new Set(allSeriesKeys);
     changedSeries = true;
   } else {
     for (const key of allSeriesKeys){
@@ -71,7 +71,7 @@ export function ensureDefaultCollapsedForCurrentBooks(){
   // SAGAS
   let changedSagas = false;
   if (!localStorage.getItem(LS_KEYS.COLLAPSED_SAGAS)){
-    collapsedSagas = new Set(allSagaNames);                   // collapse ALL sagas by default
+    collapsedSagas = new Set(allSagaNames);
     changedSagas = true;
   } else {
     for (const s of allSagaNames){
@@ -86,7 +86,7 @@ ensureDefaultCollapsedForCurrentBooks();
 export function replaceBooks(newBooks){
   books = Array.isArray(newBooks) ? newBooks : [];
   saveJSON(LS_KEYS.BOOKS, books);
-  ensureDefaultCollapsedForCurrentBooks(); // ensure new sagas/series are collapsed by default
+  ensureDefaultCollapsedForCurrentBooks();
 }
 export function replaceState(newOwnedIds = [], newReadIds = []){
   owned = new Set(newOwnedIds);
