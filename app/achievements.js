@@ -3,15 +3,14 @@ import { books, owned, read } from './state.js';
 import { escapeHtml } from './ui.js';
 
 /**
- * Asset configuration
- * - BASE: folder for your achievement images
- * - EXT:  '.svg' or '.png'
- * - USE_LOCKED_VARIANTS: if true, will try "<slug>-locked.EXT" when locked, else apply grayscale filter
+ * Asset configuration for PNGs.
+ * - USE_LOCKED_VARIANTS: false → no separate "-locked.png" files needed.
+ *   Locked badges will be shown with a grayscale/opacity CSS filter.
  */
 const BADGE_ASSETS = {
   BASE: './assets/achievements',
-  EXT: '.svg',
-  USE_LOCKED_VARIANTS: true,
+  EXT:  '.png',
+  USE_LOCKED_VARIANTS: false,
 };
 
 // Themed names for thresholds
@@ -110,9 +109,6 @@ export function renderAchievementsTab(){
   );
 
   // ---------- Per-series badges ----------
-  // Series Finisher (read all in a series)
-  // Gap Hunter (own all in any one series) — single global badge
-  // Perfect Series (own & read all in any one series) — single global badge
   const bySeries = aggregateBySeries();
   let anyOwnAllSeries = false;
   let anyPerfectSeries = false;
@@ -131,7 +127,7 @@ export function renderAchievementsTab(){
       id: `series-finish:${key}`,
       group: 'Series',
       label: `Series Finisher — ${seriesTitle(saga, series)}`,
-      slug: 'series-finish', // generic art is fine; per-series art is optional
+      slug: 'series-finish',
       achieved: readAll,
       progressText: `${r}/${t}`
     });
@@ -149,7 +145,6 @@ export function renderAchievementsTab(){
   );
 
   // ---------- Per-saga badges ----------
-  // Saga Conqueror — read all books in a saga
   const bySaga = aggregateBySaga();
   for (const [saga, info] of bySaga){
     const { total: t, readCount: r } = info;
@@ -164,30 +159,26 @@ export function renderAchievementsTab(){
     });
   }
 
-  // ---------- Sort, render ----------
-  // Order: Mastery, Read, Owned, Series, Saga, Firsts (and within groups by a gentle heuristic)
+  // ---------- Sort & render ----------
   const order = ['Mastery','Read','Owned','Series','Saga','Firsts'];
   items.sort((a,b)=>{
     const ga = order.indexOf(a.group); const gb = order.indexOf(b.group);
     if (ga !== gb) return ga - gb;
-
-    // within same group: milestones by threshold, then alphabetical
     const pa = priorityOfSlug(a.slug);
     const pb = priorityOfSlug(b.slug);
     if (pa !== pb) return pa - pb;
     return a.label.localeCompare(b.label, undefined, { numeric:true });
   });
 
-  // Build HTML (use CSS grayscale when locked if no -locked variant is used)
   const html = items.map(it => {
     const { src, usesLockedVariant } = badgeSrc(it.slug, it.achieved);
-    const lockedStyle = it.achieved ? '' : (usesLockedVariant ? '' : 'filter: grayscale(1) opacity(.7);');
+    // locked styling via CSS (since USE_LOCKED_VARIANTS=false)
+    const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.7);';
 
     const sub = it.achieved
       ? '<span class="badge">Unlocked</span>'
       : `<span class="muted text-xs">${escapeHtml(it.progressText)}</span>`;
 
-    // fallback inline SVG (if image 404s)
     const fallback = fallbackDataUrl();
 
     return `
@@ -220,17 +211,14 @@ function badgeSrc(baseSlug, achieved){
 }
 
 function priorityOfSlug(slug){
-  // Ensures milestone tiles (5, 10, ...) roughly sort before the generic ones
   if (/^(read|own)-(5|10|25|50|100|200|all)$/.test(slug)){
     const order = ['5','10','25','50','100','200','all'];
     const key = slug.split('-')[1];
     return order.indexOf(key);
   }
-  // percentage milestones
   if (slug === 'read-50pct') return 10;
   if (slug === 'read-75pct') return 11;
   if (slug === 'own-50pct')  return 12;
-  // generic: series/saga/mastery
   if (slug === 'double-mastery') return 20;
   if (slug === 'first-read') return 30;
   if (slug === 'first-owned') return 31;
@@ -275,7 +263,6 @@ function seriesTitle(saga, series){
 }
 
 function haveReadNumbers(nums){
-  // true if all numbers in `nums` are present & read
   const needed = new Set(nums);
   const readNums = new Set();
   for (const b of books){
@@ -284,7 +271,7 @@ function haveReadNumbers(nums){
     }
   }
   for (const n of needed){ if (!readNums.has(n)) return false; }
-  return nums.length > 0; // must have at least one to be meaningful
+  return nums.length > 0;
 }
 
 function progressNumbers(nums){
@@ -296,7 +283,7 @@ function progressNumbers(nums){
 }
 
 function fallbackDataUrl(){
-  // tiny neutral medal SVG (fits your palette)
+  // tiny neutral medal SVG as data URL (works fine even though assets are PNG)
   const svg = `
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
       <defs>
