@@ -182,14 +182,16 @@ export function render(onAfterCardHook){
         <button type="button" class="btn px-2 py-1 text-xs" data-saga-collapse="${escapeHtml(sagaKey)}">Collapse series</button>
       </div>`;
 
+    // ✅ Chips should be on the RIGHT → put buttons first, chips second
     header.innerHTML = `
       <h2 class="text-lg sm:text-xl font-semibold">Saga: ${escapeHtml(saga)}</h2>
-      <div class="flex items-center gap-3">${chips}${perSagaBtns}</div>
+      <div class="flex items-center gap-3">${perSagaBtns}${chips}</div>
     `;
 
     const body = document.createElement('div');
+    // ✅ Increase vertical spacing between series containers
     body.id = bodyId;
-    body.className = `p-4 panel rounded-b-xl border brand-border shadow-sm ${isSagaCollapsed ? 'hidden' : ''}`;
+    body.className = `p-4 panel rounded-b-xl border brand-border shadow-sm space-y-4 sm:space-y-5 ${isSagaCollapsed ? 'hidden' : ''}`;
 
     // wire saga toggle (entire header clickable)
     const toggleSaga = ()=>{
@@ -210,12 +212,17 @@ export function render(onAfterCardHook){
       saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
       // reflect immediately
       body.querySelectorAll('[data-series-body]').forEach(n => n.classList.remove('hidden'));
+      // also update labels/chevrons for visible headers
+      body.querySelectorAll('[data-series-toggle-visual] span')?.forEach(s=> s.textContent='Collapse');
+      body.querySelectorAll('[data-series-toggle-visual] svg')?.forEach(svg=> svg.style.transform='rotate(0deg)');
     });
     header.querySelector(`[data-saga-collapse="${CSS.escape(sagaKey)}"]`)?.addEventListener('click', (e)=>{
       e.stopPropagation();
       for (const series of seriesMap.keys()){ collapsedSeries.add(seriesKey(sagaKey, series)); }
       saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
       body.querySelectorAll('[data-series-body]').forEach(n => n.classList.add('hidden'));
+      body.querySelectorAll('[data-series-toggle-visual] span')?.forEach(s=> s.textContent='Expand');
+      body.querySelectorAll('[data-series-toggle-visual] svg')?.forEach(svg=> svg.style.transform='rotate(-180deg)');
     });
 
     // render each series in saga
@@ -245,7 +252,7 @@ export function render(onAfterCardHook){
       sHeader.setAttribute('aria-controls', sBodyId);
       sHeader.setAttribute('aria-expanded', String(!isSeriesCollapsed));
 
-      // RIGHT SIDE: bring back explicit "Expand / Collapse" control with chevron
+      // RIGHT SIDE: explicit "Expand / Collapse" control with chevron
       const actionText = isSeriesCollapsed ? 'Expand' : 'Collapse';
       sHeader.innerHTML = `
         <h3 class="text-base sm:text-lg font-semibold">Series ${seriesNum || ''}: ${escapeHtml(series)}</h3>
