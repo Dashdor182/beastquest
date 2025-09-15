@@ -35,7 +35,7 @@ function wireGlobalExpanders(){
   if (btnExpandAll) btnExpandAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(false); setAllSeriesCollapsed(false);
     render(onAfterCardHook);
-    renderStatsTab();              // ensure Stats view reflects saga state
+    renderStatsTab();
   });
   if (btnCollapseAll) btnCollapseAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(true); setAllSeriesCollapsed(true);
@@ -43,13 +43,13 @@ function wireGlobalExpanders(){
     renderStatsTab();
   });
 
-  // Stats page buttons (only sagas need to toggle there)
+  // Stats page buttons
   const btnStatsExpandAll = document.getElementById('btnStatsExpandAll');
   const btnStatsCollapseAll = document.getElementById('btnStatsCollapseAll');
   if (btnStatsExpandAll) btnStatsExpandAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(false);
-    render(onAfterCardHook); // keep Overview in sync
-    renderStatsTab();        // update Stats immediately
+    render(onAfterCardHook);
+    renderStatsTab();
   });
   if (btnStatsCollapseAll) btnStatsCollapseAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(true);
@@ -69,11 +69,17 @@ function wireFilters(){
   });
 }
 
-// Called by UI when a card checkbox changes
+// ✅ FIX: re-render Overview so per-series mini bars update instantly
 function onAfterCardHook(kind, id, checked){
   const set = (kind === 'own') ? owned : read;
   if (checked) set.add(id); else set.delete(id);
   saveJSON(kind === 'own' ? LS_KEYS.OWNED : LS_KEYS.READ, [...set]);
+
+  // Preserve scroll position to avoid jumpiness on mobile
+  const y = window.scrollY;
+  render(onAfterCardHook);       // <- triggers recalculation of mini bars
+  window.scrollTo(0, y);
+
   renderStatsTab();
   renderAchievementsTab();
 }
