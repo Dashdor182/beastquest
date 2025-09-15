@@ -26,6 +26,10 @@
       <nav class="-mb-px flex gap-2 overflow-x-auto no-scrollbar" role="tablist">
         <button id="tabOverview" class="tab-btn active" data-target="#tab-overview" aria-selected="true">Overview</button>
         <button id="tabStats" class="tab-btn inactive" data-target="#tab-stats" aria-selected="false">Stats</button>
+        <!-- NEW: Achievements -->
+        <button id="tabAchievements" class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false" title="Achievements">
+          Achievements
+        </button>
         <!-- Settings with a cog icon -->
         <button id="tabSettings" class="tab-btn inactive inline-flex items-center gap-2" data-target="#tab-settings" aria-selected="false" title="Settings">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -124,8 +128,22 @@
           <button id="btnStatsCollapseAll" class="btn">Collapse all sagas</button>
         </div>
 
-        <!-- Direct saga list -->
+        <!-- Direct saga list (stats) -->
         <div id="sagaBreakdown" class="grid gap-4"></div>
+      </div>
+    </section>
+
+    <!-- NEW: ACHIEVEMENTS TAB -->
+    <section id="tab-achievements" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabAchievements">
+      <div class="grid gap-6">
+        <section class="panel rounded-xl border brand-border shadow-sm">
+          <div class="px-4 py-3 rounded-t-xl header-grad">
+            <h3 class="text-lg font-semibold">Achievements</h3>
+          </div>
+          <div class="p-4">
+            <div id="achGrid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+          </div>
+        </section>
       </div>
     </section>
 
