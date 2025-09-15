@@ -1,9 +1,9 @@
-// App bootstrap + tab wiring + global expand/collapse + cross-view refresh
-
+// app/main.js
 import { LS_KEYS, saveJSON, owned, read } from './state.js';
 import { render, renderFiltersOptions, setAllSagasCollapsed, setAllSeriesCollapsed } from './ui.js';
 import { renderStatsTab } from './stats.js';
 import { renderAchievementsTab } from './achievements.js';
+import { initSettings } from './settings.js';
 
 function setTab(targetSel){
   document.querySelectorAll('.tab-panel').forEach(p => {
@@ -45,29 +45,4 @@ function wireGlobalExpanders(){
   const btnStatsCollapseAll = document.getElementById('btnStatsCollapseAll');
   if (btnStatsExpandAll) btnStatsExpandAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(false);
-    render(onAfterCardHook);
-  });
-  if (btnStatsCollapseAll) btnStatsCollapseAll.addEventListener('click', ()=>{
-    setAllSagasCollapsed(true);
-    render(onAfterCardHook);
-  });
-}
-
-// Called by UI when a card checkbox changes
-function onAfterCardHook(kind, id, checked){
-  const set = (kind === 'own') ? owned : read;
-  if (checked) set.add(id); else set.delete(id);
-  saveJSON(kind === 'own' ? LS_KEYS.OWNED : LS_KEYS.READ, [...set]);
-  renderStatsTab();
-  renderAchievementsTab();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  wireTabs();
-  wireGlobalExpanders();
-
-  renderFiltersOptions();
-  render(onAfterCardHook);
-  renderStatsTab();
-  renderAchievementsTab();
-});
+    re
