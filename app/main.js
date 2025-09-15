@@ -45,4 +45,47 @@ function wireGlobalExpanders(){
   const btnStatsCollapseAll = document.getElementById('btnStatsCollapseAll');
   if (btnStatsExpandAll) btnStatsExpandAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(false);
-    re
+    render(onAfterCardHook);
+  });
+  if (btnStatsCollapseAll) btnStatsCollapseAll.addEventListener('click', ()=>{
+    setAllSagasCollapsed(true);
+    render(onAfterCardHook);
+  });
+}
+
+function wireFilters(){
+  const ids = ['search','filterSaga','filterSeries','filterStatus'];
+  const onChange = ()=>{ render(onAfterCardHook); renderStatsTab(); renderAchievementsTab(); };
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', onChange);
+    el.addEventListener('change', onChange);
+  });
+}
+
+// Called by UI when a card checkbox changes
+function onAfterCardHook(kind, id, checked){
+  const set = (kind === 'own') ? owned : read;
+  if (checked) set.add(id); else set.delete(id);
+  saveJSON(kind === 'own' ? LS_KEYS.OWNED : LS_KEYS.READ, [...set]);
+  renderStatsTab();
+  renderAchievementsTab();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  wireTabs();
+  wireGlobalExpanders();
+
+  renderFiltersOptions();
+  wireFilters();
+
+  render(onAfterCardHook);
+  renderStatsTab();
+  renderAchievementsTab();
+
+  // Settings (import/export/reset)
+  initSettings({
+    onDataChanged: () => { renderFiltersOptions(); render(onAfterCardHook); renderStatsTab(); renderAchievementsTab(); }
+  });
+});
