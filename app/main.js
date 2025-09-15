@@ -35,21 +35,26 @@ function wireGlobalExpanders(){
   if (btnExpandAll) btnExpandAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(false); setAllSeriesCollapsed(false);
     render(onAfterCardHook);
+    renderStatsTab();              // ensure Stats view reflects saga state
   });
   if (btnCollapseAll) btnCollapseAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(true); setAllSeriesCollapsed(true);
     render(onAfterCardHook);
+    renderStatsTab();
   });
 
+  // Stats page buttons (only sagas need to toggle there)
   const btnStatsExpandAll = document.getElementById('btnStatsExpandAll');
   const btnStatsCollapseAll = document.getElementById('btnStatsCollapseAll');
   if (btnStatsExpandAll) btnStatsExpandAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(false);
-    render(onAfterCardHook);
+    render(onAfterCardHook); // keep Overview in sync
+    renderStatsTab();        // update Stats immediately
   });
   if (btnStatsCollapseAll) btnStatsCollapseAll.addEventListener('click', ()=>{
     setAllSagasCollapsed(true);
     render(onAfterCardHook);
+    renderStatsTab();
   });
 }
 
