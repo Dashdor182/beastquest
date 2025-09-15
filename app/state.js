@@ -4,11 +4,11 @@ export const LS_KEYS = {
   BOOKS: 'bq:books',
   OWNED: 'bq:owned',
   READ: 'bq:read',
-  COLLAPSED: 'bq:collapsedSeries',
-  COLLAPSED_SAGAS: 'bq:collapsedSagas',
+  COLLAPSED: 'bq:collapsedSeries',       // keys: `${saga}::${series}`
+  COLLAPSED_SAGAS: 'bq:collapsedSagas',  // values: 'saga name'
 };
 
-// Tiny starter dataset (replace by Import later)
+// Tiny starter dataset (replace via Import later)
 const STARTER_BOOKS = [
   { id:'S01-01', number:1,  title:'Ferno the Fire Dragon', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:1 },
   { id:'S01-02', number:2,  title:'Sepron the Sea Serpent', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:2 },
@@ -32,30 +32,53 @@ export function saveJSON(key, value){
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-export let books            = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
-export let owned            = new Set(loadJSON(LS_KEYS.OWNED, []));
-export let read             = new Set(loadJSON(LS_KEYS.READ,  []));
-export let collapsedSeries  = new Set(loadJSON(LS_KEYS.COLLAPSED, []));        // `${saga}::${series}`
-export let collapsedSagas   = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));  // `sagaName`
+export let books           = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
+export let owned           = new Set(loadJSON(LS_KEYS.OWNED, []));
+export let read            = new Set(loadJSON(LS_KEYS.READ,  []));
+export let collapsedSeries = new Set(loadJSON(LS_KEYS.COLLAPSED, []));        // `${saga}::${series}`
+export let collapsedSagas  = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));  // `sagaName`
 
 export function seriesKey(saga, series){ return `${saga}::${series}`; }
 export function allSeriesKeysFromBooks(list = books){
   const s = new Set(); for (const b of list){ s.add(seriesKey(b.saga, b.series)); } return s;
 }
+export function allSagaNamesFromBooks(list = books){
+  const s = new Set(); for (const b of list){ if (b.saga) s.add(b.saga); } return s;
+}
 
-// Default: collapse all series on first run; keep sagas expanded by default
+/**
+ * Default-collapse behavior:
+ * - On first run (no prior state), collapse **all sagas and all series**.
+ * - On subsequent runs/imports, any **new** saga/series gets added as collapsed by default.
+ *   (We never expand something the user previously chose to keep collapsed.)
+ */
 export function ensureDefaultCollapsedForCurrentBooks(){
-  const allKeys = allSeriesKeysFromBooks(books);
-  let changed = false;
+  const allSeriesKeys = allSeriesKeysFromBooks(books);
+  const allSagaNames  = allSagaNamesFromBooks(books);
+
+  // SERIES
+  let changedSeries = false;
   if (!localStorage.getItem(LS_KEYS.COLLAPSED)){
-    collapsedSeries = new Set(allKeys);
-    changed = true;
+    collapsedSeries = new Set(allSeriesKeys);                 // collapse ALL by default
+    changedSeries = true;
   } else {
-    for (const k of allKeys){
-      if (!collapsedSeries.has(k)){ collapsedSeries.add(k); changed = true; }
+    for (const key of allSeriesKeys){
+      if (!collapsedSeries.has(key)){ collapsedSeries.add(key); changedSeries = true; }
     }
   }
-  if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+  if (changedSeries) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+
+  // SAGAS
+  let changedSagas = false;
+  if (!localStorage.getItem(LS_KEYS.COLLAPSED_SAGAS)){
+    collapsedSagas = new Set(allSagaNames);                   // collapse ALL sagas by default
+    changedSagas = true;
+  } else {
+    for (const s of allSagaNames){
+      if (!collapsedSagas.has(s)){ collapsedSagas.add(s); changedSagas = true; }
+    }
+  }
+  if (changedSagas) saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
 }
 ensureDefaultCollapsedForCurrentBooks();
 
@@ -63,7 +86,7 @@ ensureDefaultCollapsedForCurrentBooks();
 export function replaceBooks(newBooks){
   books = Array.isArray(newBooks) ? newBooks : [];
   saveJSON(LS_KEYS.BOOKS, books);
-  ensureDefaultCollapsedForCurrentBooks();
+  ensureDefaultCollapsedForCurrentBooks(); // ensure new sagas/series are collapsed by default
 }
 export function replaceState(newOwnedIds = [], newReadIds = []){
   owned = new Set(newOwnedIds);
