@@ -4,8 +4,7 @@ import { escapeHtml } from './ui.js';
 
 /**
  * Asset configuration for PNGs.
- * - USE_LOCKED_VARIANTS: false → no separate "-locked.png" files needed.
- *   Locked badges will be shown with a grayscale/opacity CSS filter.
+ * Locked badges use CSS grayscale (no "-locked.png" files needed).
  */
 const BADGE_ASSETS = {
   BASE: './assets/achievements',
@@ -40,6 +39,16 @@ const THRESHOLDS = [5, 10, 25, 50, 100, 200, 'All'];
 export function renderAchievementsTab(){
   const grid = document.getElementById('achGrid');
   if (!grid) return;
+
+  // Ensure a responsive, dense grid: 2 cols on mobile, more on larger screens
+  grid.classList.add(
+    'grid',
+    'gap-2', 'sm:gap-3',
+    'grid-cols-2',        // phones (>=0px)
+    'sm:grid-cols-3',     // >=640px
+    'lg:grid-cols-4',     // >=1024px
+    'xl:grid-cols-5'      // >=1280px
+  );
 
   const total = books.length;
   const readCount = read.size;
@@ -171,22 +180,29 @@ export function renderAchievementsTab(){
   });
 
   const html = items.map(it => {
-    const { src, usesLockedVariant } = badgeSrc(it.slug, it.achieved);
-    // locked styling via CSS (since USE_LOCKED_VARIANTS=false)
-    const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.7);';
+    const { src } = badgeSrc(it.slug, it.achieved);
+    const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.8);';
 
     const sub = it.achieved
       ? '<span class="badge">Unlocked</span>'
-      : `<span class="muted text-xs">${escapeHtml(it.progressText)}</span>`;
+      : `<span class="muted text-[11px]">${escapeHtml(it.progressText)}</span>`;
 
     const fallback = fallbackDataUrl();
 
+    // Compact card on phones: p-2, 56–64px icon; scales up on larger screens
     return `
-      <div class="panel rounded-xl border brand-border p-3 text-center flex flex-col items-center gap-2">
-        <img src="${src}" width="96" height="96" alt="${escapeHtml(it.label)} badge"
-             style="${lockedStyle}"
-             onerror="this.onerror=null;this.src='${fallback}'" />
-        <div class="text-sm font-semibold">${escapeHtml(it.label)}</div>
+      <div class="panel rounded-xl border brand-border p-2 sm:p-3 text-center flex flex-col items-center gap-1 sm:gap-2">
+        <img
+          src="${src}"
+          alt="${escapeHtml(it.label)} badge"
+          class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20"
+          style="${lockedStyle}"
+          loading="lazy"
+          decoding="async"
+          onerror="this.onerror=null;this.src='${fallback}'" />
+        <div class="text-[0.82rem] sm:text-sm font-semibold leading-tight">
+          ${escapeHtml(it.label)}
+        </div>
         ${sub}
       </div>
     `;
@@ -283,7 +299,7 @@ function progressNumbers(nums){
 }
 
 function fallbackDataUrl(){
-  // tiny neutral medal SVG as data URL (works fine even though assets are PNG)
+  // tiny neutral medal SVG as data URL (fine alongside PNG assets)
   const svg = `
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
       <defs>
