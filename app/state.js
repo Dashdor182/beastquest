@@ -1,4 +1,4 @@
-import { STARTER_BOOKS } from './data.js';
+// Central app state + persistence
 
 export const LS_KEYS = {
   BOOKS: 'bq:books',
@@ -8,90 +8,66 @@ export const LS_KEYS = {
   COLLAPSED_SAGAS: 'bq:collapsedSagas',
 };
 
-export function loadJSON(key, fallback) {
+// Tiny starter dataset (replace by Import later)
+const STARTER_BOOKS = [
+  { id:'S01-01', number:1,  title:'Ferno the Fire Dragon', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:1 },
+  { id:'S01-02', number:2,  title:'Sepron the Sea Serpent', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:2 },
+  { id:'S01-03', number:3,  title:'Arcta the Mountain Giant', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:3 },
+  { id:'S01-04', number:4,  title:'Tagus the Horse-Man', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:4 },
+  { id:'S01-05', number:5,  title:'Nanook the Snow Monster', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:5 },
+  { id:'S01-06', number:6,  title:'Epos the Flame Bird', saga:'Tom and Elenna', series:'Where It All Began', seriesIndex:6 },
+  { id:'S02-07', number:7,  title:'Zepha the Monster Squid', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:1 },
+  { id:'S02-08', number:8,  title:'Claw the Giant Monkey', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:2 },
+  { id:'S02-09', number:9,  title:'Soltra the Stone Charmer', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:3 },
+  { id:'S02-10', number:10, title:'Vipero the Snake Man', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:4 },
+  { id:'S02-11', number:11, title:'Arachnid the King of Spiders', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:5 },
+  { id:'S02-12', number:12, title:'Trillion the Three-Headed Lion', saga:'Tom and Elenna', series:'The Golden Armour', seriesIndex:6 },
+];
+
+export function loadJSON(key, fallback){
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
   catch { return fallback; }
 }
-export function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+export function saveJSON(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
 
-// Live bindings (mutable)
-export let books = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
-export let owned = new Set(loadJSON(LS_KEYS.OWNED, []));
-export let read  = new Set(loadJSON(LS_KEYS.READ,  []));
-export let collapsedSeries = new Set(loadJSON(LS_KEYS.COLLAPSED, []));
-export let collapsedSagas  = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));
-
-export function setBooks(next){ books = next; saveJSON(LS_KEYS.BOOKS, books); }
-export function setOwned(nextSet){ owned = nextSet; saveJSON(LS_KEYS.OWNED, [...owned]); }
-export function setRead(nextSet){ read = nextSet; saveJSON(LS_KEYS.READ, [...read]); }
+export let books            = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
+export let owned            = new Set(loadJSON(LS_KEYS.OWNED, []));
+export let read             = new Set(loadJSON(LS_KEYS.READ,  []));
+export let collapsedSeries  = new Set(loadJSON(LS_KEYS.COLLAPSED, []));        // `${saga}::${series}`
+export let collapsedSagas   = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));  // `sagaName`
 
 export function seriesKey(saga, series){ return `${saga}::${series}`; }
 export function allSeriesKeysFromBooks(list = books){
-  const set = new Set();
-  for (const b of list){ set.add(seriesKey(b.saga, b.series)); }
-  return set;
-}
-export function allSagaKeysFromBooks(list = books){
-  const set = new Set();
-  for (const b of list){ set.add(b.saga); }
-  return set;
+  const s = new Set(); for (const b of list){ s.add(seriesKey(b.saga, b.series)); } return s;
 }
 
-/** Default collapse on first run; add new sagas/series as collapsed after imports. */
+// Default: collapse all series on first run; keep sagas expanded by default
 export function ensureDefaultCollapsedForCurrentBooks(){
-  // Series
-  const allSeries = allSeriesKeysFromBooks(books);
-  const storedSeries = localStorage.getItem(LS_KEYS.COLLAPSED);
-  if (storedSeries == null){
-    collapsedSeries = new Set(allSeries);
-    saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+  const allKeys = allSeriesKeysFromBooks(books);
+  let changed = false;
+  if (!localStorage.getItem(LS_KEYS.COLLAPSED)){
+    collapsedSeries = new Set(allKeys);
+    changed = true;
   } else {
-    let changed = false;
-    for (const key of allSeries){ if (!collapsedSeries.has(key)){ collapsedSeries.add(key); changed = true; } }
-    if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+    for (const k of allKeys){
+      if (!collapsedSeries.has(k)){ collapsedSeries.add(k); changed = true; }
+    }
   }
+  if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+}
+ensureDefaultCollapsedForCurrentBooks();
 
-  // Sagas
-  const allSagas = allSagaKeysFromBooks(books);
-  const storedSagas = localStorage.getItem(LS_KEYS.COLLAPSED_SAGAS);
-  if (storedSagas == null){
-    collapsedSagas = new Set(allSagas);
-    saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
-  } else {
-    let changed = false;
-    for (const s of allSagas){ if (!collapsedSagas.has(s)){ collapsedSagas.add(s); changed = true; } }
-    if (changed) saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
-  }
+// Replacers (used by imports)
+export function replaceBooks(newBooks){
+  books = Array.isArray(newBooks) ? newBooks : [];
+  saveJSON(LS_KEYS.BOOKS, books);
+  ensureDefaultCollapsedForCurrentBooks();
 }
-
-/* ---------- Expand/Collapse helpers (persisted) ---------- */
-export function expandAllSagas(){
-  collapsedSagas.clear();
-  saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
-}
-export function collapseAllSagas(){
-  collapsedSagas = new Set(allSagaKeysFromBooks(books));
-  saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
-}
-export function expandAllSeries(){
-  collapsedSeries.clear();
-  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-}
-export function collapseAllSeries(){
-  collapsedSeries = new Set(allSeriesKeysFromBooks(books));
-  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-}
-export function expandAllSeriesInSaga(saga){
-  for (const b of books){
-    if (b.saga !== saga) continue;
-    collapsedSeries.delete(seriesKey(b.saga, b.series));
-  }
-  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-}
-export function collapseAllSeriesInSaga(saga){
-  for (const b of books){
-    if (b.saga !== saga) continue;
-    collapsedSeries.add(seriesKey(b.saga, b.series));
-  }
-  saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
+export function replaceState(newOwnedIds = [], newReadIds = []){
+  owned = new Set(newOwnedIds);
+  read  = new Set(newReadIds);
+  saveJSON(LS_KEYS.OWNED, [...owned]);
+  saveJSON(LS_KEYS.READ,  [...read]);
 }
