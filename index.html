@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Beast Quest Collection</title>
 
-  <!-- PWA: manifest + theme color -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#181923" />
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,11 +25,7 @@
       <nav class="-mb-px flex gap-2 overflow-x-auto no-scrollbar" role="tablist">
         <button id="tabOverview" class="tab-btn active" data-target="#tab-overview" aria-selected="true">Overview</button>
         <button id="tabStats" class="tab-btn inactive" data-target="#tab-stats" aria-selected="false">Stats</button>
-        <!-- NEW: Achievements -->
-        <button id="tabAchievements" class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false" title="Achievements">
-          Achievements
-        </button>
-        <!-- Settings with a cog icon -->
+        <button id="tabAchievements" class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false">Achievements</button>
         <button id="tabSettings" class="tab-btn inactive inline-flex items-center gap-2" data-target="#tab-settings" aria-selected="false" title="Settings">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3"></circle>
@@ -43,7 +38,6 @@
 
     <!-- OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
-      <!-- Filters (sticky) -->
       <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-4 sticky-toolbar">
         <details id="filtersCollapse" class="group">
           <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
@@ -56,21 +50,18 @@
               <span class="block text-sm font-medium muted">Search title</span>
               <input id="search" type="text" placeholder="e.g., Ferno, Sea Serpent…" class="mt-1 w-full rounded-lg input" />
             </label>
-
             <label class="block">
               <span class="block text-sm font-medium muted">Saga</span>
               <select id="filterSaga" class="mt-1 w-full rounded-lg input">
                 <option value="">All sagas</option>
               </select>
             </label>
-
             <label class="block">
               <span class="block text-sm font-medium muted">Series</span>
               <select id="filterSeries" class="mt-1 w-full rounded-lg input">
                 <option value="">All series</option>
               </select>
             </label>
-
             <div class="flex gap-2">
               <label class="flex-1">
                 <span class="block text-sm font-medium muted">Status</span>
@@ -85,22 +76,17 @@
             </div>
           </div>
         </details>
-
-        <!-- Global expand/collapse controls (Overview) -->
         <div class="mt-3 flex flex-wrap gap-2">
           <button id="btnExpandAll" class="btn">Expand all (sagas & series)</button>
           <button id="btnCollapseAll" class="btn">Collapse all (sagas & series)</button>
         </div>
       </section>
-
-      <!-- Results container -->
       <div id="results" class="space-y-8"></div>
     </section>
 
     <!-- STATS TAB -->
     <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
       <div class="grid gap-6">
-        <!-- Global stats -->
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="panel rounded-xl border brand-border p-4 text-center">
             <div class="text-sm muted">Total Books</div>
@@ -121,19 +107,15 @@
             </div>
           </div>
         </section>
-
-        <!-- Global expand/collapse controls (Stats) -->
         <div class="flex flex-wrap gap-2 justify-end">
           <button id="btnStatsExpandAll" class="btn">Expand all sagas</button>
           <button id="btnStatsCollapseAll" class="btn">Collapse all sagas</button>
         </div>
-
-        <!-- Direct saga list (stats) -->
         <div id="sagaBreakdown" class="grid gap-4"></div>
       </div>
     </section>
 
-    <!-- NEW: ACHIEVEMENTS TAB -->
+    <!-- ACHIEVEMENTS TAB -->
     <section id="tab-achievements" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabAchievements">
       <div class="grid gap-6">
         <section class="panel rounded-xl border brand-border shadow-sm">
@@ -202,10 +184,7 @@
     </article>
   </template>
 
-  <!-- App bootstrap -->
   <script type="module" src="./app/main.js"></script>
-
-  <!-- PWA: Register service worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
