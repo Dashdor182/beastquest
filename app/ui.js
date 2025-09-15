@@ -1,3 +1,4 @@
+// app/ui.js
 import {
   LS_KEYS, books, owned, read,
   collapsedSeries, collapsedSagas,
@@ -29,7 +30,6 @@ export function escapeHtml(str){
 }
 const uniq = (arr)=> [...new Set(arr)];
 
-/* -------- Collapse helpers (exported for global controls) -------- */
 export function setAllSagasCollapsed(collapsed){
   const all = new Set(books.map(b=>b.saga));
   collapsedSagas.clear();
@@ -54,7 +54,6 @@ export function setSagaSeriesCollapsed(saga, collapsed){
   if (changed) saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
 }
 
-/* ---------------- Filtering & grouping ---------------- */
 export function applyFilters(list) {
   const q  = elSearch()?.value?.trim().toLowerCase() || '';
   const fs = elSaga()?.value; const fr = elSeries()?.value; const st = elStatus()?.value;
@@ -128,7 +127,6 @@ function inferSeriesNumberFromItems(items){
   return Number.isFinite(best) ? best : null;
 }
 
-/* ---------------- Render Overview ---------------- */
 export function render(onAfterCardHook){
   const filtered = applyFilters(books);
   const container = elResults();
@@ -220,7 +218,6 @@ export function render(onAfterCardHook){
       body.id = bodyId;
       if (collapsed) body.classList.add('hidden');
 
-      // Toggle by clicking the whole header
       header.addEventListener('click', (e)=>{
         e.stopPropagation();
         const isHidden = body.classList.toggle('hidden');
@@ -230,7 +227,6 @@ export function render(onAfterCardHook){
         saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
       });
 
-      // mini progress
       const agg = getSeriesAgg(saga, series);
       const mini = node.querySelector('[data-series-mini]');
       mini.innerHTML = `
@@ -259,9 +255,11 @@ export function render(onAfterCardHook){
         grid.appendChild(card);
       }
 
+      const sagaBody = sagaSection.querySelector('#' + sagaBodyId);
       sagaBody.appendChild(node);
     }
 
+    const container = elResults();
     container.appendChild(sagaSection);
   }
 }
