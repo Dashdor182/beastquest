@@ -5,6 +5,31 @@ import {
 } from './state.js';
 import { elStatTotal, elStatOwned, elStatRead, elStatPct, elStatBar, escapeHtml } from './ui.js';
 
+/* Animate a number element from its current displayed value to `to` */
+function animateCount(el, to){
+  if (!el) return;
+  const from = parseInt(el.textContent) || 0;
+  if (from === to){ el.textContent = String(to); return; }
+  const duration = 420;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+    el.textContent = String(Math.round(from + (to - from) * ease));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function motivationText(pct, readCount){
+  if (pct === 100) return '🏆 All beasts vanquished! You\'re a legend!';
+  if (pct >= 75)   return `🔥 So close! Only ${100 - pct}% left!`;
+  if (pct >= 50)   return `⚡ Over halfway there — keep going!`;
+  if (pct >= 25)   return `💪 Great progress, adventurer!`;
+  if (readCount > 0) return `🗡️ Every beast read is a victory!`;
+  return `🐉 Your quest begins… read your first beast!`;
+}
+
 function aggregateBy(keyFn){
   const map = new Map();
   for (const b of books){
@@ -19,7 +44,7 @@ function aggregateBy(keyFn){
 }
 
 function inferSeriesOrderMapForSaga(saga){
-  const order = new Map(); // series -> min series number inferred from id
+  const order = new Map();
   for (const b of books.filter(x=>x.saga===saga)){
     const name = b.series || 'Unknown';
     const m = String(b.id||'').match(/S(\d+)/i);
@@ -52,17 +77,15 @@ function renderSagaBreakdown(container){
         const pctR = m.total ? Math.round((m.read/m.total)*100) : 0;
         const pctO = m.total ? Math.round((m.owned/m.total)*100) : 0;
 
-        // two micro spark bars (Read & Owned), 60×6 each, stacked
         const sparks = `
           <div class="flex flex-col gap-1">
-            <div class="inline-block align-middle" style="width:60px;height:6px;border-radius:9999px;background:color-mix(in oklab, var(--border) 75%, black);">
-              <div style="width:${pctR}%;height:6px;border-radius:9999px;background:var(--accent2);" title="Read ${pctR}%"></div>
+            <div style="width:60px;height:6px;border-radius:9999px;background:color-mix(in oklab,var(--border) 75%,black);overflow:hidden;">
+              <div style="width:${pctR}%;height:6px;border-radius:9999px;background:var(--accent2);transition:width .4s ease;" title="Read ${pctR}%"></div>
             </div>
-            <div class="inline-block align-middle" style="width:60px;height:6px;border-radius:9999px;background:color-mix(in oklab, var(--border) 75%, black);">
-              <div style="width:${pctO}%;height:6px;border-radius:9999px;background:var(--accent);" title="Owned ${pctO}%"></div>
+            <div style="width:60px;height:6px;border-radius:9999px;background:color-mix(in oklab,var(--border) 75%,black);overflow:hidden;">
+              <div style="width:${pctO}%;height:6px;border-radius:9999px;background:var(--accent);transition:width .4s ease;" title="Owned ${pctO}%"></div>
             </div>
-          </div>
-        `;
+          </div>`;
 
         return `
           <div class="flex items-center justify-between p-2 rounded border brand-border">
@@ -70,12 +93,10 @@ function renderSagaBreakdown(container){
               ${sparks}
               <div class="text-sm font-medium">${escapeHtml(seriesName)}</div>
             </div>
-            <div class="text-xs muted">${m.read}/${m.total} read • ${m.owned}/${m.total} owned</div>
-          </div>
-        `;
+            <div class="text-xs muted">⚔️ ${m.read}/${m.total} • 🛡️ ${m.owned}/${m.total}</div>
+          </div>`;
       }).join('');
 
-    // collapsible saga section (persist to collapsedSagas; same as Overview)
     const bodyId = 'stats-sbody-' + btoa(unescape(encodeURIComponent(String(sagaName)))).replace(/[^a-z0-9]/gi,'');
     const isCollapsed = collapsedSagas.has(sagaName);
 
@@ -85,22 +106,20 @@ function renderSagaBreakdown(container){
              role="button" tabindex="0"
              aria-expanded="${!isCollapsed}" aria-controls="${bodyId}"
              data-saga-toggle="${escapeHtml(sagaName)}">
-          <h3 class="text-lg font-semibold">Saga: ${escapeHtml(sagaName)}</h3>
+          <h3 class="text-lg font-bold">⚔️ ${escapeHtml(sagaName)}</h3>
           <div class="flex gap-2">
-            <span class="badge">Read ${mSaga.read}/${mSaga.total} (${pctRead}%)</span>
-            <span class="badge">Owned ${mSaga.owned}/${mSaga.total} (${pctOwn}%)</span>
+            <span class="badge badge-read">⚔️ ${mSaga.read}/${mSaga.total}</span>
+            <span class="badge badge-own">🛡️ ${mSaga.owned}/${mSaga.total}</span>
           </div>
         </div>
         <div id="${bodyId}" class="p-3 grid gap-2 ${isCollapsed ? 'hidden' : ''}" aria-label="Series stats for ${escapeHtml(sagaName)}">
           ${seriesRows || '<div class="muted text-sm">No series found for this saga.</div>'}
         </div>
-      </section>
-    `;
+      </section>`;
   }).join('');
 
   container.innerHTML = html || '<div class="muted">No data.</div>';
 
-  // wire toggles for all saga headers (click entire header area)
   container.querySelectorAll('[data-saga-toggle]').forEach(el=>{
     el.addEventListener('click', ()=>{
       const sagaName = el.getAttribute('data-saga-toggle');
@@ -117,18 +136,24 @@ function renderSagaBreakdown(container){
 }
 
 export function renderStatsTab(){
-  // Global stats
   const total = books.length;
   let ownedCount = 0, readCount = 0;
   for (const b of books){ if (owned.has(b.id)) ownedCount++; if (read.has(b.id)) readCount++; }
   const pct = total ? Math.round((readCount/total)*100) : 0;
-  elStatTotal().textContent = String(total);
-  elStatOwned().textContent = String(ownedCount);
-  elStatRead().textContent  = String(readCount);
-  elStatPct().textContent   = pct + '%';
-  elStatBar().style.width   = pct + '%';
 
-  // Saga → Series breakdown (collapsible, persisted)
+  animateCount(elStatTotal(), total);
+  animateCount(elStatOwned(), ownedCount);
+  animateCount(elStatRead(),  readCount);
+
+  const pctEl = elStatPct();
+  if (pctEl) pctEl.textContent = pct + '%';
+
+  const barEl = elStatBar();
+  if (barEl) barEl.style.width = pct + '%';
+
+  const motEl = document.getElementById('statMotivation');
+  if (motEl) motEl.textContent = motivationText(pct, readCount);
+
   const elSagaBreakdown = document.getElementById('sagaBreakdown');
   if (elSagaBreakdown) renderSagaBreakdown(elSagaBreakdown);
 }

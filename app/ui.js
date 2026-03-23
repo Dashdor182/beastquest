@@ -47,14 +47,12 @@ function applyFilters(list){
 
 export function renderFiltersOptions(){
   if (!books?.length) return;
-  // Sagas alphabetical
   const sagas = uniq(books.map(b=>b.saga)).filter(Boolean).sort();
   if (elSaga()){
     elSaga().innerHTML = '<option value="">All sagas</option>' +
       sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
   }
 
-  // Series dropdown: sort by inferred series number (from id `S(\d+)`) ascending
   const seriesOrder = new Map();
   for (const b of books){
     const name = b.series || 'Unknown';
@@ -83,7 +81,6 @@ export function renderFiltersOptions(){
 const elResults = () => document.getElementById('results');
 
 function groupBySagaSeries(list){
-  // Map<saga, Map<series, Book[]>>
   const map = new Map();
   for (const b of list){
     if (!map.has(b.saga)) map.set(b.saga, new Map());
@@ -91,7 +88,6 @@ function groupBySagaSeries(list){
     if (!sMap.has(b.series)) sMap.set(b.series, []);
     sMap.get(b.series).push(b);
   }
-  // sort inside series by seriesIndex or number
   for (const [, sMap] of map){
     for (const [series, arr] of sMap){
       arr.sort((a,b)=> (a.seriesIndex ?? a.number ?? 0) - (b.seriesIndex ?? b.number ?? 0));
@@ -102,7 +98,6 @@ function groupBySagaSeries(list){
 }
 
 function seriesOrderForSaga(saga){
-  // returns map seriesName -> min inferred series number for labels "Series X: Name"
   const map = new Map();
   for (const b of books.filter(x=>x.saga===saga)){
     const name = b.series || 'Unknown';
@@ -143,18 +138,21 @@ export function render(onAfterCardHook){
   const filtered = applyFilters(books);
   container.innerHTML = '';
   if (!filtered.length){
-    container.innerHTML = '<div class="muted text-center">No books match your filters.</div>';
+    container.innerHTML = `
+      <div class="text-center py-16">
+        <div class="text-5xl mb-4">🐉</div>
+        <div class="text-lg font-bold mb-1">No beasts found on this quest!</div>
+        <div class="muted text-sm">Try a different search or filter.</div>
+      </div>`;
     return;
   }
 
   const grouped = groupBySagaSeries(filtered);
 
-  // build each saga section
   for (const [saga, seriesMap] of grouped){
     const sagaKey = saga;
     const isSagaCollapsed = collapsedSagas.has(sagaKey);
 
-    // sticky saga header with chips and per-saga expand/collapse series controls
     const sAgg = sagaAgg(saga);
     const bodyId = encodeId(`saga-body::${sagaKey}`);
 
@@ -170,30 +168,26 @@ export function render(onAfterCardHook){
     header.dataset.sagaToggle = sagaKey;
 
     const chips = `
-      <div class="flex gap-2">
-        <span class="badge">Read ${sAgg.rd}/${sAgg.total} (${sAgg.pctRead}%)</span>
-        <span class="badge">Owned ${sAgg.own}/${sAgg.total} (${sAgg.pctOwn}%)</span>
+      <div class="flex gap-2 shrink-0">
+        <span class="badge badge-read">⚔️ ${sAgg.rd}/${sAgg.total}</span>
+        <span class="badge badge-own">🛡️ ${sAgg.own}/${sAgg.total}</span>
       </div>`;
 
-    // per-saga expand/collapse series buttons (hidden when saga collapsed)
     const perSagaBtns = `
       <div class="flex items-center gap-2 ${isSagaCollapsed ? 'invisible' : ''}" data-saga-series-controls>
         <button type="button" class="btn px-2 py-1 text-xs" data-saga-expand="${escapeHtml(sagaKey)}">Expand series</button>
         <button type="button" class="btn px-2 py-1 text-xs" data-saga-collapse="${escapeHtml(sagaKey)}">Collapse series</button>
       </div>`;
 
-    // ✅ Chips should be on the RIGHT → put buttons first, chips second
     header.innerHTML = `
-      <h2 class="text-lg sm:text-xl font-semibold">Saga: ${escapeHtml(saga)}</h2>
+      <h2 class="text-xl sm:text-2xl font-bold tracking-wide">⚔️ ${escapeHtml(saga)}</h2>
       <div class="flex items-center gap-3">${perSagaBtns}${chips}</div>
     `;
 
     const body = document.createElement('div');
-    // ✅ Increase vertical spacing between series containers
     body.id = bodyId;
     body.className = `p-4 panel rounded-b-xl border brand-border shadow-sm space-y-4 sm:space-y-5 ${isSagaCollapsed ? 'hidden' : ''}`;
 
-    // wire saga toggle (entire header clickable)
     const toggleSaga = ()=>{
       const nowHidden = body.classList.toggle('hidden');
       header.setAttribute('aria-expanded', String(!nowHidden));
@@ -205,14 +199,11 @@ export function render(onAfterCardHook){
     header.addEventListener('click', toggleSaga);
     header.addEventListener('keydown', (e)=>{ if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleSaga(); }});
 
-    // per-saga expand/collapse series listeners
     header.querySelector(`[data-saga-expand="${CSS.escape(sagaKey)}"]`)?.addEventListener('click', (e)=>{
       e.stopPropagation();
       for (const series of seriesMap.keys()){ collapsedSeries.delete(seriesKey(sagaKey, series)); }
       saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-      // reflect immediately
       body.querySelectorAll('[data-series-body]').forEach(n => n.classList.remove('hidden'));
-      // also update labels/chevrons for visible headers
       body.querySelectorAll('[data-series-toggle-visual] span')?.forEach(s=> s.textContent='Collapse');
       body.querySelectorAll('[data-series-toggle-visual] svg')?.forEach(svg=> svg.style.transform='rotate(0deg)');
     });
@@ -225,7 +216,6 @@ export function render(onAfterCardHook){
       body.querySelectorAll('[data-series-toggle-visual] svg')?.forEach(svg=> svg.style.transform='rotate(-180deg)');
     });
 
-    // render each series in saga
     const orderMap = seriesOrderForSaga(saga);
     const seriesEntries = [...seriesMap.entries()].sort((a,b)=>{
       const oa = orderMap.get(a[0]) ?? 0;
@@ -243,7 +233,6 @@ export function render(onAfterCardHook){
       const section = document.createElement('section');
       section.className = 'rounded-xl border brand-border shadow-sm';
 
-      // header (whole bar clickable)
       const sHeader = document.createElement('div');
       sHeader.className = 'px-4 py-3 rounded-t-xl header-grad flex items-center justify-between cursor-pointer';
       sHeader.setAttribute('role','button');
@@ -252,18 +241,15 @@ export function render(onAfterCardHook){
       sHeader.setAttribute('aria-controls', sBodyId);
       sHeader.setAttribute('aria-expanded', String(!isSeriesCollapsed));
 
-      // RIGHT SIDE: explicit "Expand / Collapse" control with chevron
       const actionText = isSeriesCollapsed ? 'Expand' : 'Collapse';
       sHeader.innerHTML = `
-        <h3 class="text-base sm:text-lg font-semibold">Series ${seriesNum || ''}: ${escapeHtml(series)}</h3>
+        <h3 class="text-base sm:text-lg font-bold">Series ${seriesNum || ''}: ${escapeHtml(series)}</h3>
         <div class="inline-flex items-center gap-2 text-sm muted" data-series-toggle-visual>
           <span>${actionText}</span>
           <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
       `;
-      // initial chevron orientation
-      const visual = sHeader.querySelector('[data-series-toggle-visual]');
-      const chevron = visual?.querySelector('svg');
+      const chevron = sHeader.querySelector('[data-series-toggle-visual] svg');
       if (chevron && isSeriesCollapsed) chevron.style.transform = 'rotate(-180deg)';
 
       const sBody = document.createElement('div');
@@ -271,19 +257,19 @@ export function render(onAfterCardHook){
       sBody.dataset.seriesBody = '1';
       sBody.className = `p-4 panel rounded-b-xl ${isSeriesCollapsed ? 'hidden' : ''}`;
 
-      // per-series mini progress (bars for Read & Owned) shown above grid
+      // per-series mini progress bars
       const agg = getSeriesAgg(saga, series);
       const miniWrap = document.createElement('div');
       miniWrap.className = 'mb-3';
       miniWrap.innerHTML = `
         <div class="grid sm:grid-cols-2 gap-2 text-sm">
           <div>
-            <div class="flex justify-between muted"><span>Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
-            <div class="progress progress-track"><div class="progress progress-read" style="width:${agg.pctRead}%"></div></div>
+            <div class="flex justify-between muted"><span>⚔️ Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
+            <div class="progress progress-track mt-1"><div class="progress progress-read" style="width:${agg.pctRead}%"></div></div>
           </div>
           <div>
-            <div class="flex justify-between muted"><span>Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
-            <div class="progress progress-track"><div class="progress progress-own" style="width:${agg.pctOwn}%"></div></div>
+            <div class="flex justify-between muted"><span>🛡️ Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
+            <div class="progress progress-track mt-1"><div class="progress progress-own" style="width:${agg.pctOwn}%"></div></div>
           </div>
         </div>`;
       sBody.appendChild(miniWrap);
@@ -292,48 +278,50 @@ export function render(onAfterCardHook){
       grid.className = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3';
       sBody.appendChild(grid);
 
-      // cards
+      // book cards
       for (const b of items){
+        const isOwned = owned.has(b.id);
+        const isRead  = read.has(b.id);
+        const statusClass = (isOwned && isRead) ? 'card-complete'
+                          : isOwned ? 'card-owned'
+                          : isRead  ? 'card-read'
+                          : '';
+
         const card = document.createElement('article');
-        card.className = 'card rounded-lg border brand-border p-3 sm:p-4';
+        card.className = `card rounded-lg border brand-border p-3 sm:p-4 ${statusClass}`;
+
+        const numLabel = b.number ? `#${b.number}` : b.id;
+        const starBadge = (isOwned && isRead) ? '<span class="card-star">⭐</span>' : '';
 
         const top = document.createElement('div');
         top.className = 'flex items-start justify-between gap-3';
         top.innerHTML = `
-          <h4 class="font-medium">${escapeHtml(`${b.number ? b.number + '. ' : ''}${b.title}`)}</h4>
-          <span class="badge">${escapeHtml(b.id)}</span>
+          <h4 class="font-semibold leading-snug">${escapeHtml(b.title)}</h4>
+          <div class="flex items-center gap-1 shrink-0">${starBadge}<span class="badge">${escapeHtml(numLabel)}</span></div>
         `;
         card.appendChild(top);
 
         const controls = document.createElement('div');
-        controls.className = 'mt-3 flex items-center gap-4';
-        const ownId = `own-${encodeId(b.id)}`;
-        const readId = `read-${encodeId(b.id)}`;
+        controls.className = 'mt-3 flex items-center gap-2 flex-wrap';
         controls.innerHTML = `
-          <label class="inline-flex items-center gap-2" for="${ownId}">
-            <input id="${ownId}" type="checkbox" ${owned.has(b.id) ? 'checked':''}
-              class="h-6 w-6 sm:h-5 sm:w-5 rounded brand-border" style="accent-color: var(--accent)">
-            <span>Own</span>
-          </label>
-          <label class="inline-flex items-center gap-2" for="${readId}">
-            <input id="${readId}" type="checkbox" ${read.has(b.id) ? 'checked':''}
-              class="h-6 w-6 sm:h-5 sm:w-5 rounded brand-border" style="accent-color: var(--accent2)">
-            <span>Read</span>
-          </label>
+          <button type="button" class="toggle-btn toggle-own ${isOwned ? 'on' : ''}" aria-pressed="${isOwned}">
+            ⚔️ ${isOwned ? 'Got it!' : 'I have it?'}
+          </button>
+          <button type="button" class="toggle-btn toggle-read ${isRead ? 'on' : ''}" aria-pressed="${isRead}">
+            📖 ${isRead ? 'Read it!' : 'Read it?'}
+          </button>
         `;
         card.appendChild(controls);
         grid.appendChild(card);
 
-        // wire card checkboxes
-        controls.querySelector(`#${CSS.escape(ownId)}`)?.addEventListener('change', (e)=>{
-          onAfterCardHook?.('own', b.id, e.currentTarget.checked);
+        controls.querySelector('.toggle-own').addEventListener('click', ()=>{
+          onAfterCardHook?.('own', b.id, !owned.has(b.id));
         });
-        controls.querySelector(`#${CSS.escape(readId)}`)?.addEventListener('change', (e)=>{
-          onAfterCardHook?.('read', b.id, e.currentTarget.checked);
+        controls.querySelector('.toggle-read').addEventListener('click', ()=>{
+          onAfterCardHook?.('read', b.id, !read.has(b.id));
         });
       }
 
-      // wire series toggle (updates label + chevron too)
       const toggleSeries = ()=>{
         const nowHidden = sBody.classList.toggle('hidden');
         sHeader.setAttribute('aria-expanded', String(!nowHidden));

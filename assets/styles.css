@@ -1,108 +1,222 @@
-:root{
-  --bg:#181923;        /* base background */
-  --panel:#292d41;     /* cards/panels */
-  --border:#38405d;    /* borders/tracks */
-  --chip:#4c546d;      /* headers/subpanels */
-  --muted:#6f687a;     /* legacy muted (kept for reference) */
-  --muted-aa:#c2c7d6;  /* adjusted to meet AA on dark panels */
-  --accent:#b59e90;    /* primary accent (owned) */
-  --accent2:#a58d89;   /* secondary accent (read) */
-  --text:#e8e9ee;      /* body text */
+:root {
+  --bg:       #0f1520;        /* deep night sky */
+  --panel:    #1a2236;        /* dark blue panels */
+  --border:   #2d3f5c;        /* blue-tinted borders */
+  --chip:     #1e3a6e;        /* rich deep blue headers */
+  --muted-aa: #94a3b8;        /* accessible muted */
+  --accent:   #f5c518;        /* bright gold  – Owned */
+  --accent2:  #22d3ee;        /* electric teal – Read */
+  --text:     #e8edf5;        /* cool off-white */
+  --danger:   #f87171;        /* soft red */
 }
 
-body.body-dark{ background:var(--bg); color:var(--text); }
+/* ── Base ─────────────────────────────────────────────── */
+body.body-dark { background: var(--bg); color: var(--text); }
+body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
-/* Panels & cards */
-.panel{ background:var(--panel); }
+/* ── Panels & Cards ───────────────────────────────────── */
+.panel { background: var(--panel); }
+
 .card {
-  transition: transform .15s ease, box-shadow .15s ease;
   background: color-mix(in oklab, var(--panel) 85%, black);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
-.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(0 0 0 / .35); }
-
-.brand-border{ border-color:var(--border)!important; }
-
-/* Text */
-.muted{ color:var(--muted-aa)!important; }
-
-/* Chips */
-.badge{
-  background: var(--accent);
-  color:#11131a;                   /* dark text for strong contrast */
-  padding:2px 6px;
-  border-radius:6px;
-  font-size:.75rem;
-  font-weight:600;
-  border:1px solid rgb(0 0 0 / .25); /* ensure outline on light chip */
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgb(0 0 0 / .45);
 }
 
-/* Progress */
-.progress{ height: 8px; border-radius: 9999px; }
-.progress-xs{ height: 6px; border-radius: 9999px; }
-.progress-track{ background: color-mix(in oklab, var(--border) 75%, black); }
-.progress-read{ background: var(--accent2)!important; }
-.progress-own { background: var(--accent)!important; }
+/* Card status borders (left stripe) */
+.card-owned  { border-left: 3px solid var(--accent)  !important; }
+.card-read   { border-left: 3px solid var(--accent2) !important; }
+.card-complete {
+  border-left: 3px solid var(--accent) !important;
+  background: color-mix(in oklab, var(--panel) 88%, var(--accent2)) !important;
+}
 
-/* Micro “spark” bars (Stats series rows) */
+/* Complete sparkle badge on card */
+.card-star {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.brand-border { border-color: var(--border) !important; }
+
+/* ── Typography / Text ────────────────────────────────── */
+.muted { color: var(--muted-aa) !important; }
+
+/* ── Badges / Chips ───────────────────────────────────── */
+.badge {
+  background: var(--chip);
+  color: var(--text);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.badge-own  { background: var(--accent);  color: #0f1520; border-color: var(--accent); }
+.badge-read { background: var(--accent2); color: #0f1520; border-color: var(--accent2); }
+
+/* ── Progress bars ────────────────────────────────────── */
+.progress     { height: 8px; border-radius: 9999px; }
+.progress-xs  { height: 6px; border-radius: 9999px; }
+.progress-track { background: color-mix(in oklab, var(--border) 75%, black); }
+.progress-read  { background: var(--accent2) !important; transition: width .45s cubic-bezier(.34,1.56,.64,1); }
+.progress-own   { background: var(--accent)  !important; transition: width .45s cubic-bezier(.34,1.56,.64,1); }
+
+/* Spark bars (Stats) */
 .spark {
-  width: 64px;
-  height: 6px;
+  width: 64px; height: 6px;
   border-radius: 9999px;
   background: color-mix(in oklab, var(--border) 70%, black);
   overflow: hidden;
 }
-.spark .fill{ height: 100%; border-radius: inherit; }
-.spark .read{ background: var(--accent2); }
-.spark .own { background: var(--accent);  }
+.spark .fill  { height: 100%; border-radius: inherit; transition: width .4s ease; }
+.spark .read  { background: var(--accent2); }
+.spark .own   { background: var(--accent); }
 
-/* Tabs */
-.tab-panel.hidden{ display:none; }
-.tab-btn{ border-bottom-width:2px; padding:.75rem 1rem; font-size:.95rem; font-weight:700; }
-.tab-btn.active{ border-color:var(--accent); color:var(--accent); }
-.tab-btn.inactive{ border-color:transparent; color:var(--muted-aa); }
+/* ── Toggle Buttons (Own / Read) ──────────────────────── */
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .4rem .9rem;
+  border-radius: 9999px;
+  border: 2px solid var(--border);
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted-aa);
+  transition: background .15s ease, border-color .15s ease, color .12s ease, transform .1s ease;
+  user-select: none;
+}
+.toggle-btn:hover       { border-color: var(--muted-aa); color: var(--text); }
+.toggle-btn:active      { transform: scale(.92); }
 
-/* Inputs & buttons */
-.input{
-  background:var(--panel);
-  color:var(--text);
-  border:1px solid var(--border);
-  padding:.5rem .75rem;
+.toggle-own.on  {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0f1520;
+  animation: togglePop .22s cubic-bezier(.34,1.56,.64,1);
 }
-.input:focus{
-  outline:none;
-  box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent);
-  border-color:var(--accent);
+.toggle-read.on {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #0f1520;
+  animation: togglePop .22s cubic-bezier(.34,1.56,.64,1);
 }
-.btn{
-  border:1px solid var(--border);
-  color:var(--text);
+
+@keyframes togglePop {
+  from { transform: scale(.88); }
+  to   { transform: scale(1);   }
+}
+
+/* ── Tabs – top nav ───────────────────────────────────── */
+.tab-panel.hidden { display: none; }
+.tab-panel {
+  animation: fadeUp .18s ease both;
+}
+.tab-btn {
+  border-bottom-width: 2px;
+  padding: .75rem 1rem;
+  font-size: .95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: color .15s ease, border-color .15s ease;
+}
+.tab-btn.active   { border-color: var(--accent);  color: var(--accent); }
+.tab-btn.inactive { border-color: transparent;    color: var(--muted-aa); }
+
+/* ── Bottom navigation (mobile only) ─────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in oklab, var(--panel) 92%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Override tab-btn base for bottom nav context */
+.bottom-nav .tab-btn {
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  font-size: .67rem;
+  letter-spacing: .02em;
+}
+.bottom-nav .tab-btn .bn-icon { font-size: 1.35rem; line-height: 1; }
+.bottom-nav .tab-btn.active   { color: var(--accent);   border: none; }
+.bottom-nav .tab-btn.inactive { color: var(--muted-aa); border: none; }
+
+/* ── Saga headers ─────────────────────────────────────── */
+.header-grad {
+  background: linear-gradient(135deg, #1a3a6e, #0f2347);
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 20%, transparent);
+}
+
+/* ── Inputs & Buttons ─────────────────────────────────── */
+.input {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: .5rem .75rem;
+}
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+  border-color: var(--accent);
+}
+.btn {
+  border: 1px solid var(--border);
+  color: var(--text);
   background: color-mix(in oklab, var(--panel) 90%, black);
-  border-radius:.5rem;
-  padding:.5rem .75rem;
+  border-radius: .5rem;
+  padding: .5rem .75rem;
+  transition: background .15s ease;
 }
-.btn:hover{ background: color-mix(in oklab, var(--chip) 65%, black); }
-.btn-danger{ border-color: color-mix(in oklab, var(--accent2) 40%, black); color: var(--accent2); }
-.btn-danger:hover{ background: color-mix(in oklab, var(--accent2) 15%, black); }
+.btn:hover    { background: color-mix(in oklab, var(--chip) 65%, black); }
+.btn-danger   { border-color: color-mix(in oklab, var(--danger) 50%, var(--border)); color: var(--danger); }
+.btn-danger:hover { background: color-mix(in oklab, var(--danger) 12%, black); }
 
-/* Headers */
-.header-grad{
-  background: linear-gradient(135deg, var(--chip), color-mix(in oklab, var(--chip) 60%, var(--panel)));
+/* ── Sticky toolbar ───────────────────────────────────── */
+.sticky-toolbar { position: sticky; top: 0; z-index: 30; }
+
+/* ── Next Quest card (Achievements) ──────────────────── */
+.next-quest-card {
+  border: 2px solid var(--accent2) !important;
+  background: color-mix(in oklab, var(--panel) 88%, var(--accent2)) !important;
+  box-shadow: 0 0 24px color-mix(in oklab, var(--accent2) 12%, transparent);
+}
+.next-quest-progress { height: 10px; border-radius: 9999px; }
+
+/* ── Stat numbers ─────────────────────────────────────── */
+.stat-val { display: block; transition: transform .15s ease; }
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
 
-/* Sticky: controls bar & saga headers */
-.sticky-toolbar{ position:sticky; top:0; z-index:30; }
-.saga-sticky{ position: sticky; top: .5rem; z-index: 20; border-bottom:1px solid var(--border); }
-
-/* Clickable header area for series */
-.series-header-click{ cursor: pointer; }
-
-/* Mobile & accessibility */
-body{ -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-@media (prefers-reduced-motion: reduce){
-  .card:hover{ transform:none; box-shadow:none; }
-  .tab-btn{ transition:none; }
+/* ── Mobile & Accessibility ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .card:hover, .toggle-btn, .tab-btn { transition: none; }
+  .toggle-btn.on { animation: none; }
+  .tab-panel, .progress-read, .progress-own { animation: none; transition: none; }
 }
 
-/* Hide scrollbars on small overflow containers */
-.no-scrollbar::-webkit-scrollbar{ display:none; }
-.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+/* Hide scrollbars on overflow containers */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
