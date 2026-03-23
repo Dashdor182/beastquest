@@ -6,7 +6,7 @@
   <title>My Beast Quest Collection</title>
 
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#0f1520" />
+  <meta name="theme-color" content="#0e0c1c" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -15,8 +15,8 @@
 </head>
 <body class="body-dark">
 
-  <!-- ── Main content (bottom padding makes room for mobile nav) ── -->
-  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24 sm:pb-8">
+  <!-- ── Main content (pb-28 always makes room for bottom nav) ── -->
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-28">
 
     <!-- Header -->
     <header class="mb-6">
@@ -27,36 +27,19 @@
       <p class="muted mt-1">Atlas's epic reading adventure 🐉</p>
     </header>
 
-    <!-- Top tab nav – hidden on mobile (bottom nav used instead) -->
-    <div class="mb-6 border-b brand-border hidden sm:block">
-      <nav class="-mb-px flex gap-2 overflow-x-auto no-scrollbar" role="tablist" aria-label="Main navigation">
-        <button id="tabOverview"     class="tab-btn active"  data-target="#tab-overview"     aria-selected="true">🗺️ Collection</button>
-        <button id="tabStats"        class="tab-btn inactive" data-target="#tab-stats"        aria-selected="false">📊 Stats</button>
-        <button id="tabAchievements" class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false">🏆 Quests</button>
-        <button id="tabSettings"     class="tab-btn inactive inline-flex items-center gap-2" data-target="#tab-settings" aria-selected="false" title="Settings">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 3.3l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 1 1 20.7 7.04l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .66.39 1.26 1 1.51.16.07.33.11.51.11H21a2 2 0 1 1 0 4h-.09c-.18 0-.35.04-.51.11-.61.25-1 .85-1 1.51z"></path>
-          </svg>
-          <span>Settings</span>
-        </button>
-      </nav>
-    </div>
-
     <!-- OVERVIEW TAB -->
     <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
       <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-4 sticky-toolbar">
+        <!-- Always-visible quick search -->
+        <div class="mb-3">
+          <input id="search" type="text" placeholder="🔍 Search beasts…" class="w-full rounded-lg input" />
+        </div>
         <details id="filtersCollapse" class="group">
           <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
-            <span class="badge">🔍 Filters</span>
-            <span>Show / hide search &amp; filters</span>
+            <span class="badge">⚙️ More filters</span>
             <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </summary>
-          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 items-end">
-            <label class="block">
-              <span class="block text-sm font-medium muted">Search title</span>
-              <input id="search" type="text" placeholder="e.g., Ferno, Sea Serpent…" class="mt-1 w-full rounded-lg input" />
-            </label>
+          <div class="mt-3 grid gap-3 sm:grid-cols-3 lg:gap-4 items-end">
             <label class="block">
               <span class="block text-sm font-medium muted">Saga</span>
               <select id="filterSaga" class="mt-1 w-full rounded-lg input">
@@ -69,18 +52,16 @@
                 <option value="">All series</option>
               </select>
             </label>
-            <div class="flex gap-2">
-              <label class="flex-1">
-                <span class="block text-sm font-medium muted">Status</span>
-                <select id="filterStatus" class="mt-1 w-full rounded-lg input">
-                  <option value="all">All books</option>
-                  <option value="owned">Got it ⚔️</option>
-                  <option value="read">Read it 📖</option>
-                  <option value="unowned">Don't have yet</option>
-                  <option value="unread">Not read yet</option>
-                </select>
-              </label>
-            </div>
+            <label class="block">
+              <span class="block text-sm font-medium muted">Status</span>
+              <select id="filterStatus" class="mt-1 w-full rounded-lg input">
+                <option value="all">All books</option>
+                <option value="owned">Got it ⚔️</option>
+                <option value="read">Read it 🔥</option>
+                <option value="unowned">Don't have yet</option>
+                <option value="unread">Not read yet</option>
+              </select>
+            </label>
           </div>
         </details>
         <div class="mt-3 flex flex-wrap gap-2">
@@ -94,31 +75,48 @@
     <!-- STATS TAB -->
     <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
       <div class="grid gap-6">
+
+        <!-- Top 4 stat cards -->
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="panel rounded-xl border brand-border p-4 text-center">
-            <div class="text-sm muted">📚 Total Beasts</div>
-            <div id="statTotal" class="text-3xl font-bold stat-val">0</div>
+          <div class="panel rounded-2xl border brand-border p-5 text-center">
+            <div class="text-2xl mb-1">📚</div>
+            <div class="text-xs muted cinzel uppercase tracking-widest">Total Beasts</div>
+            <div id="statTotal" class="text-4xl font-bold stat-val mt-1">0</div>
           </div>
-          <div class="panel rounded-xl border brand-border p-4 text-center">
-            <div class="text-sm muted">🛡️ Collected</div>
-            <div id="statOwned" class="text-3xl font-bold stat-val" style="color:var(--accent)">0</div>
+          <div class="panel rounded-2xl border brand-border p-5 text-center">
+            <div class="text-2xl mb-1">🛡️</div>
+            <div class="text-xs muted cinzel uppercase tracking-widest">Seized</div>
+            <div id="statOwned" class="text-4xl font-bold stat-val mt-1" style="color:var(--gold)">0</div>
           </div>
-          <div class="panel rounded-xl border brand-border p-4 text-center">
-            <div class="text-sm muted">⚔️ Vanquished</div>
-            <div id="statRead" class="text-3xl font-bold stat-val" style="color:var(--accent2)">0</div>
+          <div class="panel rounded-2xl border brand-border p-5 text-center">
+            <div class="text-2xl mb-1">🔥</div>
+            <div class="text-xs muted cinzel uppercase tracking-widest">Defeated</div>
+            <div id="statRead" class="text-4xl font-bold stat-val mt-1" style="color:var(--fire)">0</div>
           </div>
-          <div class="panel rounded-xl border brand-border p-4">
-            <div class="flex items-center justify-between text-sm muted"><span>Quest progress</span><span id="statPct" class="font-bold" style="color:var(--accent)">0%</span></div>
-            <div class="progress mt-2 progress-track">
-              <div id="statBar" class="progress progress-own" style="width:0%"></div>
+          <!-- Circular ring card -->
+          <div class="panel rounded-2xl border brand-border p-5 flex flex-col items-center justify-center">
+            <div class="stat-ring-wrap">
+              <svg class="stat-ring" width="100" height="100" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="50"/>
+                <circle id="statRingFill" class="ring-fill" cx="60" cy="60" r="50"/>
+              </svg>
+              <div class="stat-ring-center">
+                <span id="statPct" class="text-lg font-bold cinzel" style="color:var(--gold)">0%</span>
+              </div>
             </div>
-            <div id="statMotivation" class="text-xs muted mt-2 text-center"></div>
+            <div class="text-xs muted cinzel uppercase tracking-widest mt-2 text-center">Quest Progress</div>
           </div>
         </section>
+
+        <!-- Motivation -->
+        <div id="statMotivation" class="text-center text-sm muted italic panel rounded-xl border brand-border px-4 py-3"></div>
+
+        <!-- Expand/collapse controls -->
         <div class="flex flex-wrap gap-2 justify-end">
           <button id="btnStatsExpandAll"   class="btn">⬇️ Expand all sagas</button>
           <button id="btnStatsCollapseAll" class="btn">⬆️ Collapse all sagas</button>
         </div>
+
         <div id="sagaBreakdown" class="grid gap-4"></div>
       </div>
     </section>
@@ -126,9 +124,7 @@
     <!-- ACHIEVEMENTS TAB -->
     <section id="tab-achievements" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabAchievements">
       <div class="grid gap-4">
-        <!-- Next quest card injected here -->
         <div id="achNextQuest"></div>
-
         <section class="panel rounded-xl border brand-border shadow-sm">
           <div class="px-4 py-3 rounded-t-xl header-grad">
             <h3 class="text-lg font-bold">🏅 All Achievements</h3>
@@ -142,68 +138,64 @@
 
     <!-- SETTINGS TAB -->
     <section id="tab-settings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabSettings">
-      <div class="grid gap-6">
-        <section class="panel rounded-xl border brand-border shadow-sm">
-          <div class="px-4 py-3 rounded-t-xl header-grad">
-            <h3 class="text-lg font-bold">⚙️ Settings</h3>
+      <div class="grid gap-5">
+
+        <!-- Book catalogue -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <h3 class="text-base font-bold cinzel">📚 Book Catalogue</h3>
+            <p class="text-xs muted mt-1">Import or export the list of Beast Quest books</p>
           </div>
-          <div class="p-4 space-y-4">
-            <p class="muted text-sm">Import your catalogue, export your data, or reset local progress.</p>
-            <div class="flex flex-wrap gap-2">
-              <button id="btnImportBooks"    class="btn">📥 Import Books (JSON)</button>
-              <button id="btnImportBooksCSV" class="btn">📥 Import Books (CSV)</button>
-              <button id="btnExportBooks"    class="btn">📤 Export Books</button>
-              <button id="btnImportState"    class="btn">📥 Import Progress</button>
-              <button id="btnExportState"    class="btn">📤 Export Progress</button>
-              <button id="btnClearState"     class="btn btn-danger">🗑️ Clear Progress</button>
-              <input id="hiddenFile" type="file" class="hidden" />
-            </div>
-            <p class="muted text-xs">Note: imports replace your in-app catalogue; progress import replaces Owned/Read flags.</p>
+          <div class="settings-section-body flex flex-wrap gap-3">
+            <button id="btnImportBooks"    class="btn">📥 Import JSON</button>
+            <button id="btnImportBooksCSV" class="btn">📥 Import CSV</button>
+            <button id="btnExportBooks"    class="btn">📤 Export JSON</button>
           </div>
-        </section>
+        </div>
+
+        <!-- Quest progress -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <h3 class="text-base font-bold cinzel">⚔️ Quest Progress</h3>
+            <p class="text-xs muted mt-1">Save or restore your owned &amp; read progress</p>
+          </div>
+          <div class="settings-section-body flex flex-wrap gap-3">
+            <button id="btnImportState" class="btn">📥 Import Progress</button>
+            <button id="btnExportState" class="btn">📤 Export Progress</button>
+          </div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="settings-section settings-section-danger">
+          <div class="settings-section-head">
+            <h3 class="text-base font-bold" style="color:var(--danger)">⚠️ Danger Zone</h3>
+            <p class="text-xs muted mt-1">This cannot be undone!</p>
+          </div>
+          <div class="settings-section-body">
+            <button id="btnClearState" class="btn btn-danger">🗑️ Clear All Progress</button>
+          </div>
+        </div>
+
+        <input id="hiddenFile" type="file" class="hidden" />
       </div>
     </section>
   </div>
 
-  <!-- ── Bottom navigation (mobile only) ─────────────────────────── -->
-  <nav class="bottom-nav sm:hidden" role="tablist" aria-label="Main navigation">
-    <button class="tab-btn active"  data-target="#tab-overview"     aria-selected="true">
+  <!-- ── Bottom navigation (always visible) ─────────────── -->
+  <nav class="bottom-nav" role="tablist" aria-label="Main navigation">
+    <button id="tabOverview" class="tab-btn active" data-target="#tab-overview" aria-selected="true">
       <span class="bn-icon">🗺️</span><span>Collection</span>
     </button>
-    <button class="tab-btn inactive" data-target="#tab-stats"        aria-selected="false">
+    <button id="tabStats" class="tab-btn inactive" data-target="#tab-stats" aria-selected="false">
       <span class="bn-icon">📊</span><span>Stats</span>
     </button>
-    <button class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false">
+    <button id="tabAchievements" class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false">
       <span class="bn-icon">🏆</span><span>Quests</span>
     </button>
-    <button class="tab-btn inactive" data-target="#tab-settings"     aria-selected="false">
+    <button id="tabSettings" class="tab-btn inactive" data-target="#tab-settings" aria-selected="false">
       <span class="bn-icon">⚙️</span><span>Settings</span>
     </button>
   </nav>
-
-  <!-- Templates (used by legacy code path if any) -->
-  <template id="tpl-series">
-    <section class="panel rounded-xl border brand-border shadow-sm mb-4 sm:mb-6">
-      <div class="px-4 py-3 rounded-t-xl header-grad series-header-click" data-series-header></div>
-      <div class="p-4" data-series-body>
-        <div data-series-mini class="mb-3"></div>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-series-grid></div>
-      </div>
-    </section>
-  </template>
-
-  <template id="tpl-card">
-    <article class="card rounded-lg border brand-border p-3 sm:p-4">
-      <div class="flex items-start justify-between gap-3">
-        <h4 class="font-medium" data-title></h4>
-        <span class="badge" data-number></span>
-      </div>
-      <div class="mt-3 flex items-center gap-3">
-        <button type="button" class="toggle-btn toggle-own" data-own>⚔️ Got it!</button>
-        <button type="button" class="toggle-btn toggle-read" data-read>📖 Read it!</button>
-      </div>
-    </article>
-  </template>
 
   <script type="module" src="./app/main.js"></script>
   <script>

@@ -148,8 +148,15 @@ export function renderStatsTab(){
   const pctEl = elStatPct();
   if (pctEl) pctEl.textContent = pct + '%';
 
-  const barEl = elStatBar();
-  if (barEl) barEl.style.width = pct + '%';
+  // Animate circular ring (circumference of r=50 circle ≈ 314)
+  const ringFill = document.getElementById('statRingFill');
+  if (ringFill) {
+    const circumference = 314;
+    // defer one frame so the CSS transition fires
+    requestAnimationFrame(() => {
+      ringFill.style.strokeDashoffset = String(Math.round(circumference * (1 - pct / 100)));
+    });
+  }
 
   const motEl = document.getElementById('statMotivation');
   if (motEl) motEl.textContent = motivationText(pct, readCount);

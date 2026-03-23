@@ -1,222 +1,381 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────────── */
 :root {
-  --bg:       #0f1520;        /* deep night sky */
-  --panel:    #1a2236;        /* dark blue panels */
-  --border:   #2d3f5c;        /* blue-tinted borders */
-  --chip:     #1e3a6e;        /* rich deep blue headers */
-  --muted-aa: #94a3b8;        /* accessible muted */
-  --accent:   #f5c518;        /* bright gold  – Owned */
-  --accent2:  #22d3ee;        /* electric teal – Read */
-  --text:     #e8edf5;        /* cool off-white */
-  --danger:   #f87171;        /* soft red */
+  --bg:        #0e0c1c;   /* deep night */
+  --panel:     #1a1730;   /* dark panel */
+  --panel2:    #231f40;   /* raised panel */
+  --border:    #3a3260;   /* purple border */
+  --chip:      #2d2850;   /* badge chip */
+  --gold:      #f5c430;   /* owned – amber gold */
+  --fire:      #e8622a;   /* read – dragon fire */
+  --emerald:   #2dd48c;   /* complete – emerald */
+  --text:      #f0e8d8;   /* parchment white */
+  --muted:     #9585b8;   /* muted purple */
+  --danger:    #e05252;   /* danger red */
+  /* backward-compat aliases used in JS inline styles */
+  --accent:    var(--gold);
+  --accent2:   var(--fire);
+  --muted-aa:  var(--muted);
 }
 
-/* ── Base ─────────────────────────────────────────────── */
-body.body-dark { background: var(--bg); color: var(--text); }
+/* ── Base ──────────────────────────────────────────────── */
+body.body-dark {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
 body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
-/* ── Panels & Cards ───────────────────────────────────── */
+/* Fantasy headings */
+h1, h2, h3, .cinzel { font-family: 'Cinzel', Georgia, serif; }
+
+/* ── Panels ────────────────────────────────────────────── */
 .panel { background: var(--panel); }
-
-.card {
-  background: color-mix(in oklab, var(--panel) 85%, black);
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgb(0 0 0 / .45);
-}
-
-/* Card status borders (left stripe) */
-.card-owned  { border-left: 3px solid var(--accent)  !important; }
-.card-read   { border-left: 3px solid var(--accent2) !important; }
-.card-complete {
-  border-left: 3px solid var(--accent) !important;
-  background: color-mix(in oklab, var(--panel) 88%, var(--accent2)) !important;
-}
-
-/* Complete sparkle badge on card */
-.card-star {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
 .brand-border { border-color: var(--border) !important; }
 
-/* ── Typography / Text ────────────────────────────────── */
-.muted { color: var(--muted-aa) !important; }
+/* ── Book Cards ────────────────────────────────────────── */
+.card {
+  background: var(--panel2);
+  border: 2px solid var(--border);
+  border-radius: 1rem;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgb(255 255 255 / .03) 0%, transparent 60%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgb(0 0 0 / .55);
+}
+/* Card owned – gold glow */
+.card-owned {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 14px color-mix(in oklab, var(--gold) 18%, transparent);
+}
+/* Card read – fire glow */
+.card-read {
+  border-color: var(--fire) !important;
+  box-shadow: 0 0 14px color-mix(in oklab, var(--fire) 18%, transparent);
+}
+/* Card complete – emerald glow */
+.card-complete {
+  border-color: var(--emerald) !important;
+  background: color-mix(in oklab, var(--panel2) 90%, var(--emerald)) !important;
+  box-shadow: 0 0 22px color-mix(in oklab, var(--emerald) 22%, transparent) !important;
+}
 
-/* ── Badges / Chips ───────────────────────────────────── */
+/* Complete sparkle */
+.card-star { font-size: 1rem; line-height: 1; }
+
+/* Book number coin badge */
+.card-coin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: var(--chip);
+  border: 2px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: var(--muted);
+  font-family: 'Cinzel', serif;
+  flex-shrink: 0;
+  transition: border-color .15s ease, color .15s ease;
+}
+.card-owned .card-coin   { border-color: var(--gold);    color: var(--gold); }
+.card-read  .card-coin   { border-color: var(--fire);    color: var(--fire); }
+.card-complete .card-coin { border-color: var(--emerald); color: var(--emerald); }
+
+/* ── Badges / Chips ────────────────────────────────────── */
 .badge {
   background: var(--chip);
   color: var(--text);
-  padding: 2px 8px;
+  padding: 2px 10px;
   border-radius: 999px;
   font-size: .72rem;
   font-weight: 700;
-  letter-spacing: .02em;
+  letter-spacing: .03em;
   border: 1px solid var(--border);
   white-space: nowrap;
 }
-.badge-own  { background: var(--accent);  color: #0f1520; border-color: var(--accent); }
-.badge-read { background: var(--accent2); color: #0f1520; border-color: var(--accent2); }
+.badge-own  { background: var(--gold);  color: #0e0c1c; border-color: var(--gold); }
+.badge-read { background: var(--fire);  color: #fff;    border-color: var(--fire); }
 
-/* ── Progress bars ────────────────────────────────────── */
-.progress     { height: 8px; border-radius: 9999px; }
-.progress-xs  { height: 6px; border-radius: 9999px; }
-.progress-track { background: color-mix(in oklab, var(--border) 75%, black); }
-.progress-read  { background: var(--accent2) !important; transition: width .45s cubic-bezier(.34,1.56,.64,1); }
-.progress-own   { background: var(--accent)  !important; transition: width .45s cubic-bezier(.34,1.56,.64,1); }
-
-/* Spark bars (Stats) */
-.spark {
-  width: 64px; height: 6px;
-  border-radius: 9999px;
-  background: color-mix(in oklab, var(--border) 70%, black);
-  overflow: hidden;
-}
-.spark .fill  { height: 100%; border-radius: inherit; transition: width .4s ease; }
-.spark .read  { background: var(--accent2); }
-.spark .own   { background: var(--accent); }
-
-/* ── Toggle Buttons (Own / Read) ──────────────────────── */
+/* ── Toggle Buttons ────────────────────────────────────── */
 .toggle-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: .4rem;
-  padding: .4rem .9rem;
-  border-radius: 9999px;
+  flex: 1;
+  padding: .6rem .5rem;
+  border-radius: .75rem;
   border: 2px solid var(--border);
   font-size: .82rem;
   font-weight: 700;
   cursor: pointer;
-  background: transparent;
-  color: var(--muted-aa);
+  background: var(--chip);
+  color: var(--muted);
   transition: background .15s ease, border-color .15s ease, color .12s ease, transform .1s ease;
   user-select: none;
+  min-height: 44px;
 }
-.toggle-btn:hover       { border-color: var(--muted-aa); color: var(--text); }
-.toggle-btn:active      { transform: scale(.92); }
+.toggle-btn:hover { border-color: var(--muted); color: var(--text); }
+.toggle-btn:active { transform: scale(.94); }
 
-.toggle-own.on  {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0f1520;
+.toggle-own.on {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0e0c1c;
+  font-weight: 900;
   animation: togglePop .22s cubic-bezier(.34,1.56,.64,1);
 }
 .toggle-read.on {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  color: #0f1520;
+  background: var(--fire);
+  border-color: var(--fire);
+  color: #fff;
+  font-weight: 900;
   animation: togglePop .22s cubic-bezier(.34,1.56,.64,1);
 }
 
 @keyframes togglePop {
-  from { transform: scale(.88); }
-  to   { transform: scale(1);   }
+  from { transform: scale(.86); }
+  to   { transform: scale(1); }
 }
 
-/* ── Tabs – top nav ───────────────────────────────────── */
-.tab-panel.hidden { display: none; }
-.tab-panel {
-  animation: fadeUp .18s ease both;
+/* ── Saga Headers ──────────────────────────────────────── */
+.header-grad {
+  background: linear-gradient(135deg, #2a1f4e 0%, #1d1838 50%, #241d42 100%);
+  border-top:    2px solid color-mix(in oklab, var(--gold) 35%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--gold) 15%, transparent);
 }
+
+/* ── Progress bars ─────────────────────────────────────── */
+.progress        { height: 8px;  border-radius: 9999px; }
+.progress-xs     { height: 5px;  border-radius: 9999px; }
+.progress-track  { background: color-mix(in oklab, var(--border) 70%, black); }
+.progress-read   { background: var(--fire)    !important; transition: width .45s cubic-bezier(.34,1.56,.64,1); }
+.progress-own    { background: var(--gold)    !important; transition: width .45s cubic-bezier(.34,1.56,.64,1); }
+
+/* ── Circular progress ring (Stats) ───────────────────── */
+.stat-ring-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.stat-ring { transform: rotate(-90deg); display: block; }
+.ring-track {
+  fill: none;
+  stroke: color-mix(in oklab, var(--border) 80%, black);
+  stroke-width: 10;
+}
+.ring-fill {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 314;
+  stroke-dashoffset: 314;
+  transition: stroke-dashoffset .9s cubic-bezier(.34,1.56,.64,1);
+}
+.stat-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ── Stat numbers ──────────────────────────────────────── */
+.stat-val {
+  display: block;
+  font-family: 'Cinzel', serif;
+  transition: transform .15s ease;
+}
+
+/* ── Tab panels ────────────────────────────────────────── */
+.tab-panel.hidden { display: none !important; }
+.tab-panel { animation: fadeUp .2s ease both; }
+
+/* Base tab-btn (shared) */
 .tab-btn {
-  border-bottom-width: 2px;
-  padding: .75rem 1rem;
-  font-size: .95rem;
   font-weight: 700;
-  white-space: nowrap;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color .15s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
-.tab-btn.active   { border-color: var(--accent);  color: var(--accent); }
-.tab-btn.inactive { border-color: transparent;    color: var(--muted-aa); }
 
-/* ── Bottom navigation (mobile only) ─────────────────── */
+/* ── Bottom navigation (always visible, all screen sizes) */
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 40;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  background: color-mix(in oklab, var(--panel) 92%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: color-mix(in oklab, var(--panel) 96%, black);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 2px solid color-mix(in oklab, var(--gold) 22%, var(--border));
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
-/* Override tab-btn base for bottom nav context */
 .bottom-nav .tab-btn {
-  border-bottom: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 8px 4px;
-  font-size: .67rem;
-  letter-spacing: .02em;
+  gap: 4px;
+  padding: 10px 4px 12px;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: relative;
 }
-.bottom-nav .tab-btn .bn-icon { font-size: 1.35rem; line-height: 1; }
-.bottom-nav .tab-btn.active   { color: var(--accent);   border: none; }
-.bottom-nav .tab-btn.inactive { color: var(--muted-aa); border: none; }
-
-/* ── Saga headers ─────────────────────────────────────── */
-.header-grad {
-  background: linear-gradient(135deg, #1a3a6e, #0f2347);
-  border-bottom: 1px solid color-mix(in oklab, var(--accent) 20%, transparent);
+.bottom-nav .tab-btn .bn-icon {
+  font-size: 1.45rem;
+  line-height: 1;
+  display: block;
 }
+.bottom-nav .tab-btn.active { color: var(--gold); }
+.bottom-nav .tab-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 10px color-mix(in oklab, var(--gold) 60%, transparent);
+}
+.bottom-nav .tab-btn.inactive { color: var(--muted); }
 
-/* ── Inputs & Buttons ─────────────────────────────────── */
+/* ── Inputs ────────────────────────────────────────────── */
 .input {
-  background: var(--panel);
+  background: var(--panel2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   padding: .5rem .75rem;
+  border-radius: .5rem;
 }
 .input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
-  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--gold) 28%, transparent);
+  border-color: var(--gold);
 }
-.btn {
-  border: 1px solid var(--border);
-  color: var(--text);
-  background: color-mix(in oklab, var(--panel) 90%, black);
-  border-radius: .5rem;
-  padding: .5rem .75rem;
-  transition: background .15s ease;
-}
-.btn:hover    { background: color-mix(in oklab, var(--chip) 65%, black); }
-.btn-danger   { border-color: color-mix(in oklab, var(--danger) 50%, var(--border)); color: var(--danger); }
-.btn-danger:hover { background: color-mix(in oklab, var(--danger) 12%, black); }
 
-/* ── Sticky toolbar ───────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────── */
+.btn {
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  background: var(--panel2);
+  border-radius: .6rem;
+  padding: .5rem .9rem;
+  font-size: .88rem;
+  font-weight: 600;
+  transition: background .15s ease, border-color .15s ease;
+  cursor: pointer;
+}
+.btn:hover { background: var(--chip); border-color: var(--muted); }
+.btn-danger { border-color: color-mix(in oklab, var(--danger) 55%, var(--border)); color: var(--danger); }
+.btn-danger:hover { background: color-mix(in oklab, var(--danger) 12%, var(--panel2)); }
+
+/* ── Sticky toolbar ────────────────────────────────────── */
 .sticky-toolbar { position: sticky; top: 0; z-index: 30; }
 
-/* ── Next Quest card (Achievements) ──────────────────── */
+/* ── Next Quest card ───────────────────────────────────── */
 .next-quest-card {
-  border: 2px solid var(--accent2) !important;
-  background: color-mix(in oklab, var(--panel) 88%, var(--accent2)) !important;
-  box-shadow: 0 0 24px color-mix(in oklab, var(--accent2) 12%, transparent);
+  border: 2px solid var(--fire) !important;
+  background: color-mix(in oklab, var(--panel) 90%, var(--fire)) !important;
+  box-shadow: 0 0 28px color-mix(in oklab, var(--fire) 14%, transparent);
 }
-.next-quest-progress { height: 10px; border-radius: 9999px; }
+.next-quest-progress { height: 12px; border-radius: 9999px; }
 
-/* ── Stat numbers ─────────────────────────────────────── */
-.stat-val { display: block; transition: transform .15s ease; }
+/* ── Achievement medallions ────────────────────────────── */
+.ach-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem 1.25rem;
+  background: var(--panel);
+  border-radius: 1rem;
+  border: 2px solid var(--border);
+  text-align: center;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.ach-item.achieved {
+  border-color: var(--gold);
+  box-shadow: 0 0 22px color-mix(in oklab, var(--gold) 22%, transparent);
+}
+.ach-item:hover { transform: translateY(-3px); }
 
-/* ── Animations ───────────────────────────────────────── */
+.ach-badge-frame {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  overflow: hidden;
+  background: var(--panel2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.ach-item.achieved .ach-badge-frame {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px color-mix(in oklab, var(--gold) 42%, transparent);
+}
+.ach-badge-frame img { width: 100%; height: 100%; object-fit: cover; }
+.ach-badge-locked { filter: grayscale(1) opacity(.4); }
+
+/* ── Settings sections ─────────────────────────────────── */
+.settings-section {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.settings-section-head {
+  background: linear-gradient(135deg, #2a1f4e 0%, #1d1838 100%);
+  border-top:    2px solid color-mix(in oklab, var(--gold) 30%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--gold) 12%, transparent);
+  padding: 0.75rem 1.25rem;
+}
+.settings-section-body { padding: 1.25rem; }
+.settings-section-danger .settings-section-head {
+  border-top-color: color-mix(in oklab, var(--danger) 50%, transparent);
+}
+
+/* ── Typography ────────────────────────────────────────── */
+.muted { color: var(--muted) !important; }
+
+/* ── Animations ────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Mobile & Accessibility ───────────────────────────── */
+/* ── Accessibility ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .card:hover, .toggle-btn, .tab-btn { transition: none; }
+  .card:hover, .ach-item:hover { transform: none !important; transition: none; }
   .toggle-btn.on { animation: none; }
   .tab-panel, .progress-read, .progress-own { animation: none; transition: none; }
+  .ring-fill { transition: none; }
 }
 
-/* Hide scrollbars on overflow containers */
+/* ── Scrollbar ─────────────────────────────────────────── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
