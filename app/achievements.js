@@ -2,19 +2,14 @@
 import { books, owned, read } from './state.js';
 import { escapeHtml } from './ui.js';
 
-/**
- * PNG assets; locked variants not used (grayscale via CSS).
- */
 const BADGE_ASSETS = {
   BASE: './assets/achievements',
   EXT:  '.png',
   USE_LOCKED_VARIANTS: false,
 };
 
-// Persist which achievements are unlocked so we can toast only new ones
 const ACH_UNLOCKED_KEY = 'bq:achUnlocked';
 
-// Themed names for thresholds
 const READ_NAMES = new Map([
   [5,   'Apprentice Adventurer'],
   [10,  'Beast Tracker'],
@@ -37,29 +32,62 @@ const OWN_NAMES = new Map([
 
 const THRESHOLDS = [5, 10, 25, 50, 100, 200, 'All'];
 
-// Render the Achievements tab
+/* ── Next Quest card ─────────────────────────────────── */
+function renderNextQuestCard(items){
+  const el = document.getElementById('achNextQuest');
+  if (!el) return;
+
+  // Find the first unachieved Read milestone (lowest threshold not yet unlocked)
+  const next = items.find(it => it.group === 'Read' && !it.achieved);
+
+  if (!next){
+    // All read milestones done — show a celebration instead
+    el.innerHTML = `
+      <div class="next-quest-card panel rounded-xl p-5 text-center">
+        <div class="text-4xl mb-2">🏆</div>
+        <div class="text-lg font-bold">All reading quests complete!</div>
+        <div class="muted text-sm mt-1">You've conquered every beast. Truly legendary!</div>
+      </div>`;
+    return;
+  }
+
+  const total   = books.length;
+  const readCount = read.size;
+  const target  = next.id === `read-All` ? total : Number(next.id.replace('read-', ''));
+  const current = Math.min(readCount, target);
+  const pct     = target > 0 ? Math.round(current / target * 100) : 0;
+  const left    = target - current;
+
+  el.innerHTML = `
+    <div class="next-quest-card panel rounded-xl p-4 sm:p-5">
+      <div class="text-xs font-bold muted uppercase tracking-widest mb-1">⚡ Your Next Quest</div>
+      <div class="text-xl font-bold mb-1">${escapeHtml(READ_NAMES.get(THRESHOLDS.find(t => `read-${t === 'All' ? 'All' : t}` === next.id) ?? next.id.replace('read-','')) ?? next.id)}</div>
+      <div class="muted text-sm mb-3">
+        Read <strong style="color:var(--accent2)">${left}</strong> more ${left === 1 ? 'book' : 'books'} to unlock this achievement!
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex-1 progress-track next-quest-progress overflow-hidden rounded-full">
+          <div class="next-quest-progress" style="width:${pct}%;background:var(--accent2);border-radius:9999px;transition:width .5s cubic-bezier(.34,1.56,.64,1);"></div>
+        </div>
+        <span class="text-sm font-bold shrink-0" style="color:var(--accent2)">${current}/${target}</span>
+      </div>
+    </div>`;
+}
+
+/* ── Main render ─────────────────────────────────────── */
 export function renderAchievementsTab(){
   const grid = document.getElementById('achGrid');
   if (!grid) return;
 
-  // dense, responsive grid
-  grid.className = '';
-  grid.classList.add(
-    'grid',
-    'gap-2', 'sm:gap-3',
-    'grid-cols-2',
-    'sm:grid-cols-3',
-    'lg:grid-cols-4',
-    'xl:grid-cols-5'
-  );
+  grid.className = 'grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
 
-  const total = books.length;
-  const readCount = read.size;
+  const total      = books.length;
+  const readCount  = read.size;
   const ownedCount = owned.size;
 
   const items = [];
 
-  // --- Read milestones ---
+  // Read milestones
   for (const t of THRESHOLDS){
     items.push({
       id: `read-${t}`,
@@ -71,7 +99,7 @@ export function renderAchievementsTab(){
     });
   }
 
-  // --- Owned milestones ---
+  // Owned milestones
   for (const t of THRESHOLDS){
     items.push({
       id: `own-${t}`,
@@ -83,23 +111,22 @@ export function renderAchievementsTab(){
     });
   }
 
-  // --- Series Finisher (per series) ---
+  // Series Finisher
   const bySeries = aggregateBySeries();
   for (const [key, info] of bySeries){
     const { saga, series, total: t, readCount: r } = info;
     if (!t) continue;
-    const readAll = (r === t);
     items.push({
       id: `series-finish:${key}`,
       group: 'Series',
       label: `Series Finisher — ${seriesTitle(saga, series)}`,
       slug: 'series-finish',
-      achieved: readAll,
+      achieved: r === t,
       progressText: `${r}/${t}`
     });
   }
 
-  // --- Saga Conqueror (per saga) ---
+  // Saga Conqueror
   const bySaga = aggregateBySaga();
   for (const [saga, info] of bySaga){
     const { total: t, readCount: r } = info;
@@ -114,10 +141,10 @@ export function renderAchievementsTab(){
     });
   }
 
-  // --- Unlock detection & toasts ---
-  const prevRaw = localStorage.getItem(ACH_UNLOCKED_KEY);
+  // Unlock detection & toasts
+  const prevRaw  = localStorage.getItem(ACH_UNLOCKED_KEY);
   const firstRun = prevRaw == null;
-  const prev = new Set(prevRaw ? JSON.parse(prevRaw) : []);
+  const prev     = new Set(prevRaw ? JSON.parse(prevRaw) : []);
   const currentUnlocked = items.filter(i => i.achieved).map(i => i.id);
   const newly = currentUnlocked.filter(id => !prev.has(id));
   localStorage.setItem(ACH_UNLOCKED_KEY, JSON.stringify(currentUnlocked));
@@ -127,12 +154,15 @@ export function renderAchievementsTab(){
       const it = items.find(x => x.id === id);
       if (!it) continue;
       const { src } = badgeSrc(it.slug, true);
-      showAchievementToast({ title: 'Achievement unlocked!', label: it.label, src });
+      showAchievementToast({ label: it.label, src });
     }
-    try { navigator?.vibrate?.(10); } catch {}
+    try { navigator?.vibrate?.([50, 30, 50]); } catch {}
   }
 
-  // --- Sort & render ---
+  // Render next quest card
+  renderNextQuestCard(items);
+
+  // Sort & render grid
   const order = ['Read','Owned','Series','Saga'];
   items.sort((a,b)=>{
     const ga = order.indexOf(a.group); const gb = order.indexOf(b.group);
@@ -145,13 +175,13 @@ export function renderAchievementsTab(){
 
   const html = items.map(it => {
     const { src } = badgeSrc(it.slug, it.achieved);
-    const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.8);';
+    const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.5);';
     const sub = it.achieved
-      ? '<span class="badge">Unlocked</span>'
+      ? '<span class="badge badge-own">🏆 Unlocked!</span>'
       : `<span class="muted text-[11px]">${escapeHtml(it.progressText)}</span>`;
     const fallback = fallbackDataUrl();
     return `
-      <div class="panel rounded-xl border brand-border p-2 sm:p-3 text-center flex flex-col items-center gap-1 sm:gap-2">
+      <div class="panel rounded-xl border brand-border p-2 sm:p-3 text-center flex flex-col items-center gap-1 sm:gap-2 ${it.achieved ? 'ring-1 ring-[color:var(--accent)]' : ''}">
         <img
           src="${src}"
           alt="${escapeHtml(it.label)} badge"
@@ -160,67 +190,62 @@ export function renderAchievementsTab(){
           loading="lazy"
           decoding="async"
           onerror="this.onerror=null;this.src='${fallback}'" />
-        <div class="text-[0.82rem] sm:text-sm font-semibold leading-tight">
+        <div class="text-[0.78rem] sm:text-sm font-semibold leading-tight">
           ${escapeHtml(it.label)}
         </div>
         ${sub}
-      </div>
-    `;
+      </div>`;
   }).join('');
 
   grid.innerHTML = html || '<div class="muted">No achievements configured.</div>';
 }
 
-/* ---------------- Toast ---------------- */
-
-function showAchievementToast({ title, label, src }){
+/* ── Toast notification ─────────────────────────────── */
+function showAchievementToast({ label, src }){
   let root = document.getElementById('achToastRoot');
   if (!root){
     root = document.createElement('div');
     root.id = 'achToastRoot';
-    root.className = 'fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 sm:items-end sm:pr-4 pointer-events-none';
+    // Position above bottom nav on mobile
+    root.className = 'fixed inset-x-0 bottom-20 sm:bottom-4 z-50 flex flex-col items-center gap-3 sm:items-end sm:pr-4 pointer-events-none';
     root.setAttribute('role', 'status');
     root.setAttribute('aria-live', 'polite');
     document.body.appendChild(root);
   }
 
   const el = document.createElement('div');
-  el.className = 'panel border brand-border rounded-xl shadow-lg pointer-events-auto px-3 py-2 flex items-center gap-3 w-[min(92vw,22rem)]';
-  el.style.transition = 'transform .2s ease, opacity .2s ease';
-  el.style.transform = 'translateY(8px)';
-  el.style.opacity = '0';
+  el.className = 'panel border-2 rounded-2xl shadow-2xl pointer-events-auto px-4 py-3 flex items-center gap-4 w-[min(90vw,26rem)]';
+  el.style.cssText = 'border-color:var(--accent);box-shadow:0 0 32px color-mix(in oklab,var(--accent) 25%,transparent);transition:transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;transform:translateY(16px) scale(.95);opacity:0;';
 
+  const fallback = fallbackDataUrl();
   el.innerHTML = `
-    <img src="${src}" alt="" class="w-10 h-10 rounded-md flex-none" />
-    <div class="min-w-0">
-      <div class="text-xs muted">${escapeHtml(title)}</div>
-      <div class="text-sm font-semibold truncate">${escapeHtml(label)}</div>
+    <img src="${src}" alt="" class="w-14 h-14 rounded-xl flex-none"
+         onerror="this.onerror=null;this.src='${fallback}'" />
+    <div class="min-w-0 flex-1">
+      <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent)">🏆 Achievement Unlocked!</div>
+      <div class="text-base font-bold leading-tight mt-0.5">${escapeHtml(label)}</div>
     </div>
-    <button type="button" aria-label="Dismiss"
-      class="ml-auto text-sm muted hover:text-[color:var(--text)]">✕</button>
+    <button type="button" aria-label="Dismiss" class="text-lg muted hover:text-[color:var(--text)] shrink-0">✕</button>
   `;
 
   const dismiss = () => {
+    el.style.transform = 'translateY(12px) scale(.95)';
     el.style.opacity = '0';
-    el.style.transform = 'translateY(8px)';
-    setTimeout(() => el.remove(), 200);
+    setTimeout(() => el.remove(), 250);
   };
 
   el.querySelector('button')?.addEventListener('click', dismiss);
-  setTimeout(dismiss, 4000);
+  setTimeout(dismiss, 5000);
 
   root.prepend(el);
-  requestAnimationFrame(()=>{
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    el.style.transform = 'translateY(0) scale(1)';
     el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-  });
+  }));
 }
 
-/* ---------------- helpers ---------------- */
-
-function thresholdSlug(t, total){
-  return (t === 'All') ? 'all' : String(t);
-}
+/* ── Helpers ─────────────────────────────────────────── */
+function thresholdSlug(t){ return (t === 'All') ? 'all' : String(t); }
 
 function badgeSrc(baseSlug, achieved){
   const base = BADGE_ASSETS.BASE;
@@ -231,7 +256,6 @@ function badgeSrc(baseSlug, achieved){
   return { src: `${base}/${baseSlug}${ext}`, usesLockedVariant: false };
 }
 
-// Only the slugs we still use
 function priorityOfSlug(slug){
   if (/^(read|own)-(5|10|25|50|100|200|all)$/.test(slug)){
     const order = ['5','10','25','50','100','200','all'];
@@ -244,7 +268,6 @@ function priorityOfSlug(slug){
 }
 
 function aggregateBySeries(){
-  // key => { saga, series, total, readCount }
   const map = new Map();
   for (const b of books){
     const key = `${b.saga}::${b.series}`;
@@ -257,7 +280,6 @@ function aggregateBySeries(){
 }
 
 function aggregateBySaga(){
-  // saga => { total, readCount }
   const map = new Map();
   for (const b of books){
     const key = b.saga || 'Unknown';
@@ -278,13 +300,13 @@ function fallbackDataUrl(){
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
       <defs>
         <linearGradient id='g' x1='0' x2='0' y1='0' y2='1'>
-          <stop offset='0' stop-color='#6f687a'/>
-          <stop offset='1' stop-color='#292d41'/>
+          <stop offset='0' stop-color='#1e3a6e'/>
+          <stop offset='1' stop-color='#0f1520'/>
         </linearGradient>
       </defs>
       <rect width='96' height='96' rx='16' fill='url(#g)'/>
-      <circle cx='48' cy='44' r='20' fill='#b59e90'/>
-      <rect x='36' y='64' width='24' height='12' rx='3' fill='#a58d89'/>
+      <circle cx='48' cy='44' r='20' fill='#f5c518'/>
+      <rect x='36' y='64' width='24' height='12' rx='3' fill='#22d3ee'/>
     </svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
