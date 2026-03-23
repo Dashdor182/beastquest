@@ -79,7 +79,7 @@ export function renderAchievementsTab(){
   const grid = document.getElementById('achGrid');
   if (!grid) return;
 
-  grid.className = 'grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+  grid.className = 'grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
 
   const total      = books.length;
   const readCount  = read.size;
@@ -175,22 +175,23 @@ export function renderAchievementsTab(){
 
   const html = items.map(it => {
     const { src } = badgeSrc(it.slug, it.achieved);
-    const lockedStyle = it.achieved ? '' : 'filter: grayscale(1) opacity(.5);';
+    const imgClass = it.achieved ? '' : 'ach-badge-locked';
     const sub = it.achieved
       ? '<span class="badge badge-own">🏆 Unlocked!</span>'
       : `<span class="muted text-[11px]">${escapeHtml(it.progressText)}</span>`;
     const fallback = fallbackDataUrl();
     return `
-      <div class="panel rounded-xl border brand-border p-2 sm:p-3 text-center flex flex-col items-center gap-1 sm:gap-2 ${it.achieved ? 'ring-1 ring-[color:var(--accent)]' : ''}">
-        <img
-          src="${src}"
-          alt="${escapeHtml(it.label)} badge"
-          class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20"
-          style="${lockedStyle}"
-          loading="lazy"
-          decoding="async"
-          onerror="this.onerror=null;this.src='${fallback}'" />
-        <div class="text-[0.78rem] sm:text-sm font-semibold leading-tight">
+      <div class="ach-item ${it.achieved ? 'achieved' : ''}">
+        <div class="ach-badge-frame">
+          <img
+            src="${src}"
+            alt="${escapeHtml(it.label)} badge"
+            class="${imgClass}"
+            loading="lazy"
+            decoding="async"
+            onerror="this.onerror=null;this.src='${fallback}'" />
+        </div>
+        <div class="text-[0.75rem] sm:text-sm font-semibold leading-tight cinzel">
           ${escapeHtml(it.label)}
         </div>
         ${sub}
@@ -214,16 +215,24 @@ function showAchievementToast({ label, src }){
   }
 
   const el = document.createElement('div');
-  el.className = 'panel border-2 rounded-2xl shadow-2xl pointer-events-auto px-4 py-3 flex items-center gap-4 w-[min(90vw,26rem)]';
-  el.style.cssText = 'border-color:var(--accent);box-shadow:0 0 32px color-mix(in oklab,var(--accent) 25%,transparent);transition:transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;transform:translateY(16px) scale(.95);opacity:0;';
+  el.className = 'pointer-events-auto px-4 py-3 flex items-center gap-4 w-[min(90vw,26rem)] rounded-2xl shadow-2xl';
+  el.style.cssText = [
+    'background:var(--panel2)',
+    'border:2px solid var(--gold)',
+    'box-shadow:0 0 32px color-mix(in oklab,var(--gold) 28%,transparent)',
+    'transition:transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s ease',
+    'transform:translateY(16px) scale(.95)',
+    'opacity:0',
+  ].join(';');
 
   const fallback = fallbackDataUrl();
   el.innerHTML = `
-    <img src="${src}" alt="" class="w-14 h-14 rounded-xl flex-none"
-         onerror="this.onerror=null;this.src='${fallback}'" />
+    <div class="ach-badge-frame flex-none" style="width:52px;height:52px;border-color:var(--gold)">
+      <img src="${src}" alt="" onerror="this.onerror=null;this.src='${fallback}'" />
+    </div>
     <div class="min-w-0 flex-1">
-      <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--accent)">🏆 Achievement Unlocked!</div>
-      <div class="text-base font-bold leading-tight mt-0.5">${escapeHtml(label)}</div>
+      <div class="text-xs font-bold uppercase tracking-widest cinzel" style="color:var(--gold)">🏆 Achievement Unlocked!</div>
+      <div class="text-sm font-bold leading-tight mt-0.5">${escapeHtml(label)}</div>
     </div>
     <button type="button" aria-label="Dismiss" class="text-lg muted hover:text-[color:var(--text)] shrink-0">✕</button>
   `;

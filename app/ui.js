@@ -288,27 +288,30 @@ export function render(onAfterCardHook){
                           : '';
 
         const card = document.createElement('article');
-        card.className = `card rounded-lg border brand-border p-3 sm:p-4 ${statusClass}`;
+        card.className = `card p-3 sm:p-4 ${statusClass}`;
 
         const numLabel = b.number ? `#${b.number}` : b.id;
-        const starBadge = (isOwned && isRead) ? '<span class="card-star">⭐</span>' : '';
+        const starBadge = (isOwned && isRead) ? '<span class="card-star ml-1">⭐</span>' : '';
 
         const top = document.createElement('div');
-        top.className = 'flex items-start justify-between gap-3';
+        top.className = 'flex items-start justify-between gap-3 mb-2';
         top.innerHTML = `
-          <h4 class="font-semibold leading-snug">${escapeHtml(b.title)}</h4>
-          <div class="flex items-center gap-1 shrink-0">${starBadge}<span class="badge">${escapeHtml(numLabel)}</span></div>
+          <h4 class="font-semibold leading-snug text-sm sm:text-base">${escapeHtml(b.title)}</h4>
+          <div class="flex items-center gap-1 shrink-0">
+            ${starBadge}
+            <span class="card-coin">${escapeHtml(numLabel)}</span>
+          </div>
         `;
         card.appendChild(top);
 
         const controls = document.createElement('div');
-        controls.className = 'mt-3 flex items-center gap-2 flex-wrap';
+        controls.className = 'mt-2 flex items-center gap-2';
         controls.innerHTML = `
           <button type="button" class="toggle-btn toggle-own ${isOwned ? 'on' : ''}" aria-pressed="${isOwned}">
-            ⚔️ ${isOwned ? 'Got it!' : 'I have it?'}
+            ⚔️ ${isOwned ? 'Got it!' : 'Got it?'}
           </button>
           <button type="button" class="toggle-btn toggle-read ${isRead ? 'on' : ''}" aria-pressed="${isRead}">
-            📖 ${isRead ? 'Read it!' : 'Read it?'}
+            🔥 ${isRead ? 'Read it!' : 'Read it?'}
           </button>
         `;
         card.appendChild(controls);
