@@ -30,14 +30,15 @@ export function loadJSON(key, fallback){
   catch { return fallback; }
 }
 export function saveJSON(key, value){
-  localStorage.setItem(key, JSON.stringify(value));
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) { console.warn(`Failed to save "${key}" to localStorage:`, e?.message || e); }
 }
 
-export let books           = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
-export let owned           = new Set(loadJSON(LS_KEYS.OWNED, []));
-export let read            = new Set(loadJSON(LS_KEYS.READ,  []));
-export let collapsedSeries = new Set(loadJSON(LS_KEYS.COLLAPSED, []));        // `${saga}::${series}`
-export let collapsedSagas  = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));  // `sagaName`
+export const books           = loadJSON(LS_KEYS.BOOKS, STARTER_BOOKS);
+export const owned           = new Set(loadJSON(LS_KEYS.OWNED, []));
+export const read            = new Set(loadJSON(LS_KEYS.READ,  []));
+export const collapsedSeries = new Set(loadJSON(LS_KEYS.COLLAPSED, []));        // `${saga}::${series}`
+export const collapsedSagas  = new Set(loadJSON(LS_KEYS.COLLAPSED_SAGAS, []));  // `sagaName`
 
 export function seriesKey(saga, series){ return `${saga}::${series}`; }
 export function allSeriesKeysFromBooks(list = books){
@@ -59,7 +60,8 @@ export function ensureDefaultCollapsedForCurrentBooks(){
   // SERIES
   let changedSeries = false;
   if (!localStorage.getItem(LS_KEYS.COLLAPSED)){
-    collapsedSeries = new Set(allSeriesKeys);                 // collapse ALL by default
+    collapsedSeries.clear();
+    for (const key of allSeriesKeys) collapsedSeries.add(key);  // collapse ALL by default
     changedSeries = true;
   } else {
     for (const key of allSeriesKeys){
@@ -71,7 +73,8 @@ export function ensureDefaultCollapsedForCurrentBooks(){
   // SAGAS
   let changedSagas = false;
   if (!localStorage.getItem(LS_KEYS.COLLAPSED_SAGAS)){
-    collapsedSagas = new Set(allSagaNames);                   // collapse ALL sagas by default
+    collapsedSagas.clear();
+    for (const s of allSagaNames) collapsedSagas.add(s);        // collapse ALL sagas by default
     changedSagas = true;
   } else {
     for (const s of allSagaNames){
@@ -80,17 +83,20 @@ export function ensureDefaultCollapsedForCurrentBooks(){
   }
   if (changedSagas) saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
 }
-ensureDefaultCollapsedForCurrentBooks();
 
 // Replacers (used by imports)
 export function replaceBooks(newBooks){
-  books = Array.isArray(newBooks) ? newBooks : [];
+  const arr = Array.isArray(newBooks) ? newBooks : [];
+  books.length = 0;
+  books.push(...arr);
   saveJSON(LS_KEYS.BOOKS, books);
   ensureDefaultCollapsedForCurrentBooks(); // ensure new sagas/series are collapsed by default
 }
 export function replaceState(newOwnedIds = [], newReadIds = []){
-  owned = new Set(newOwnedIds);
-  read  = new Set(newReadIds);
+  owned.clear();
+  for (const id of newOwnedIds) owned.add(id);
+  read.clear();
+  for (const id of newReadIds) read.add(id);
   saveJSON(LS_KEYS.OWNED, [...owned]);
   saveJSON(LS_KEYS.READ,  [...read]);
 }

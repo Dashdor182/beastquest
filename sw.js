@@ -1,6 +1,6 @@
 /* Beast Quest PWA Service Worker */
 
-const APP_VERSION = 'bq-2025-09-15-01';
+const APP_VERSION = 'bq-2026-03-23-01';
 const CACHE_NAME  = `beastquest-${APP_VERSION}`;
 
 const APP_ASSETS = [
@@ -11,7 +11,9 @@ const APP_ASSETS = [
   './app/ui.js',
   './app/stats.js',
   './app/state.js',
-  './app/achievements.js',   // NEW
+  './app/achievements.js',
+  './app/settings.js',
+  './app/csv.js',
   'https://cdn.tailwindcss.com'
 ];
 
