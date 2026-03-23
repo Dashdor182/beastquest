@@ -6,6 +6,7 @@ import {
   import { render, renderFiltersOptions } from './ui.js';
   import { renderStatsTab } from './stats.js';
   import { renderAchievementsTab } from './achievements.js';
+  import { parseCSV, detectDelimiter } from './csv.js';
   
   export function initSettings({ onDataChanged } = {}){
     const btnImportBooks = document.getElementById('btnImportBooks');
@@ -138,51 +139,5 @@ import {
       };
     });
     return out;
-  }
-  
-  function detectDelimiter(text){
-    const sample = text.slice(0, 10000);
-    const lines = sample.split(/\r\n|\n|\r/).slice(0, 10);
-    const cands = [',',';','\t','|'];
-    let best = ',', bestScore = -1;
-    for (const cand of cands){
-      let score = 0;
-      for (const line of lines){
-        let inQ = false, cnt = 0;
-        for (let i=0;i<line.length;i++){
-          const ch = line[i];
-          if (ch === '"'){
-            if (inQ && line[i+1] === '"'){ i++; continue; }
-            inQ = !inQ;
-          } else if (!inQ && ch === cand){ cnt++; }
-        }
-        score += cnt;
-      }
-      if (score > bestScore){ bestScore = score; best = cand; }
-    }
-    return best;
-  }
-  
-  function parseCSV(text, delimiter=','){
-    text = text.replace(/^\uFEFF/, ''); // strip BOM
-    const rows = [];
-    let row = [], field = '', inQ = false;
-    for (let i=0;i<text.length;i++){
-      const ch = text[i];
-      if (inQ){
-        if (ch === '"'){
-          if (text[i+1] === '"'){ field += '"'; i++; }
-          else { inQ = false; }
-        } else { field += ch; }
-      } else {
-        if (ch === '"'){ inQ = true; }
-        else if (ch === delimiter){ row.push(field); field = ''; }
-        else if (ch === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
-        else if (ch === '\r'){ if (text[i+1] === '\n') i++; row.push(field); rows.push(row); row = []; field = ''; }
-        else { field += ch; }
-      }
-    }
-    if (field.length || row.length){ row.push(field); rows.push(row); }
-    return rows;
   }
   
