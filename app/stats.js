@@ -5,7 +5,6 @@ import {
 } from './state.js';
 import { elStatTotal, elStatOwned, elStatRead, elStatPct, escapeHtml } from './ui.js';
 
-/* Animate a number element from current to target */
 function animateCount(el, to) {
   if (!el) return;
   const from = parseInt(el.textContent) || 0;
@@ -43,7 +42,7 @@ function aggregateBy(keyFn) {
   return map;
 }
 
-function inferSeriesOrderMapForSaga(saga) {
+function inferSeriesOrder(saga) {
   const order = new Map();
   for (const b of books.filter(x => x.saga === saga)) {
     const name = b.series || 'Unknown';
@@ -61,49 +60,41 @@ function renderSagaBreakdown(container) {
   container.innerHTML = '';
 
   for (const [sagaName, mSaga] of sagasSorted) {
-    const pctRead = mSaga.total ? Math.round((mSaga.read  / mSaga.total) * 100) : 0;
-    const pctOwn  = mSaga.total ? Math.round((mSaga.owned / mSaga.total) * 100) : 0;
-
-    const orderMap = inferSeriesOrderMapForSaga(sagaName);
-    const bySeries = aggregateBy(b => (b.saga === sagaName ? (b.series || 'Unknown') : null));
+    const orderMap = inferSeriesOrder(sagaName);
+    const bySeries = aggregateBy(b => b.saga === sagaName ? (b.series || 'Unknown') : null);
     bySeries.delete(null);
 
     const isCollapsed = collapsedSagas.has(sagaName);
-    const bodyId = 'sbody-' + btoa(unescape(encodeURIComponent(String(sagaName)))).replace(/[^a-z0-9]/gi, '');
+    const bodyId = 'sb-' + btoa(unescape(encodeURIComponent(String(sagaName)))).replace(/[^a-z0-9]/gi, '');
 
-    /* Saga card */
     const card = document.createElement('div');
-    card.className = 'breakdown-saga';
+    card.className = 'breakdown-card';
 
-    /* Header */
-    const hdr = document.createElement('div');
-    hdr.className = 'breakdown-saga-header';
-    hdr.setAttribute('role', 'button');
-    hdr.setAttribute('tabindex', '0');
-    hdr.setAttribute('aria-expanded', String(!isCollapsed));
-    hdr.setAttribute('aria-controls', bodyId);
-    hdr.dataset.sagaToggle = sagaName;
+    const head = document.createElement('div');
+    head.className = 'breakdown-card-head';
+    head.setAttribute('role', 'button');
+    head.setAttribute('tabindex', '0');
+    head.setAttribute('aria-expanded', String(!isCollapsed));
+    head.setAttribute('aria-controls', bodyId);
+    head.dataset.sagaToggle = sagaName;
 
-    hdr.innerHTML = `
-      <span class="breakdown-saga-title">⚔ ${escapeHtml(sagaName)}</span>
-      <div class="breakdown-saga-chips">
+    head.innerHTML = `
+      <span class="breakdown-card-name">${escapeHtml(sagaName)}</span>
+      <div class="breakdown-chips">
         <span class="saga-chip saga-chip--gold">🛡 ${mSaga.owned}/${mSaga.total}</span>
-        <span class="saga-chip saga-chip--crimson">⚔ ${mSaga.read}/${mSaga.total}</span>
+        <span class="saga-chip saga-chip--red">⚔ ${mSaga.read}/${mSaga.total}</span>
       </div>
     `;
 
-    /* Body */
     const body = document.createElement('div');
     body.id = bodyId;
-    body.className = 'breakdown-saga-body' + (isCollapsed ? ' breakdown-saga-body--hidden' : '');
+    body.className = 'breakdown-card-body' + (isCollapsed ? ' breakdown-card-body--hidden' : '');
 
-    /* Series rows */
-    const seriesEntries = [...bySeries.entries()]
-      .sort((a, b) => {
-        const oa = orderMap.get(a[0]) ?? Number.MAX_SAFE_INTEGER;
-        const ob = orderMap.get(b[0]) ?? Number.MAX_SAFE_INTEGER;
-        return oa !== ob ? oa - ob : a[0].localeCompare(b[0]);
-      });
+    const seriesEntries = [...bySeries.entries()].sort((a, b) => {
+      const oa = orderMap.get(a[0]) ?? Number.MAX_SAFE_INTEGER;
+      const ob = orderMap.get(b[0]) ?? Number.MAX_SAFE_INTEGER;
+      return oa !== ob ? oa - ob : a[0].localeCompare(b[0]);
+    });
 
     for (const [seriesName, m] of seriesEntries) {
       const pctR = m.total ? Math.round((m.read  / m.total) * 100) : 0;
@@ -112,13 +103,9 @@ function renderSagaBreakdown(container) {
       const row = document.createElement('div');
       row.className = 'breakdown-series-row';
       row.innerHTML = `
-        <div class="breakdown-series-bars">
-          <div class="breakdown-series-bar">
-            <div class="breakdown-series-bar-fill quest-bar-fill--crimson" style="width:${pctR}%" title="Read ${pctR}%"></div>
-          </div>
-          <div class="breakdown-series-bar">
-            <div class="breakdown-series-bar-fill quest-bar-fill--gold" style="width:${pctO}%" title="Got ${pctO}%"></div>
-          </div>
+        <div class="breakdown-sparkbars">
+          <div class="sparkbar"><div class="sparkbar-fill bar-fill--red"  style="width:${pctR}%"></div></div>
+          <div class="sparkbar"><div class="sparkbar-fill bar-fill--gold" style="width:${pctO}%"></div></div>
         </div>
         <span class="breakdown-series-name">${escapeHtml(seriesName)}</span>
         <span class="breakdown-series-counts">⚔ ${m.read}/${m.total} · 🛡 ${m.owned}/${m.total}</span>
@@ -126,21 +113,16 @@ function renderSagaBreakdown(container) {
       body.appendChild(row);
     }
 
-    if (!seriesEntries.length) {
-      body.innerHTML = '<div style="color:var(--ink3);font-size:0.82rem;padding:6px 4px;">No series data.</div>';
-    }
-
-    /* Toggle */
     const toggle = () => {
-      const nowHidden = body.classList.toggle('breakdown-saga-body--hidden');
-      hdr.setAttribute('aria-expanded', String(!nowHidden));
+      const nowHidden = body.classList.toggle('breakdown-card-body--hidden');
+      head.setAttribute('aria-expanded', String(!nowHidden));
       if (nowHidden) collapsedSagas.add(sagaName); else collapsedSagas.delete(sagaName);
       saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
     };
-    hdr.addEventListener('click', toggle);
-    hdr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    head.addEventListener('click', toggle);
+    head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
 
-    card.appendChild(hdr);
+    card.appendChild(head);
     card.appendChild(body);
     container.appendChild(card);
   }
@@ -162,7 +144,6 @@ export function renderStatsTab() {
   const pctEl = elStatPct();
   if (pctEl) pctEl.textContent = pct + '%';
 
-  /* Animate circular ring (circumference of r=50 ≈ 314) */
   const ringFill = document.getElementById('statRingFill');
   if (ringFill) {
     requestAnimationFrame(() => {
@@ -173,6 +154,6 @@ export function renderStatsTab() {
   const motEl = document.getElementById('statMotivation');
   if (motEl) motEl.textContent = motivationText(pct, readCount);
 
-  const breakdown = document.getElementById('sagaBreakdown');
-  if (breakdown) renderSagaBreakdown(breakdown);
+  const bd = document.getElementById('sagaBreakdown');
+  if (bd) renderSagaBreakdown(bd);
 }
