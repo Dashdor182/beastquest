@@ -3,186 +3,203 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>My Beast Quest</title>
+  <title>Beast Quest Tracker</title>
 
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#1a0c04" />
+  <meta name="theme-color" content="#080e18" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
 
-  <!-- ── Header + Navigation ── -->
-  <header class="bq-header">
-    <div class="bq-banner">
-      <span class="banner-deco" aria-hidden="true">⚔</span>
-      <div class="banner-text">
-        <h1 class="banner-title">Beast Quest</h1>
-        <p class="banner-sub">My Bestiary</p>
+  <!-- ── App shell ── -->
+  <div class="app-shell">
+
+    <!-- Page header (shown in all tabs) -->
+    <header class="app-header">
+      <div class="app-header-inner">
+        <div class="header-logo">
+          <span class="header-logo-icon">⚔</span>
+          <div>
+            <div class="header-logo-title">Beast Quest</div>
+            <div class="header-logo-sub">My Collection</div>
+          </div>
+        </div>
+        <!-- Tab-specific right content (injected by JS) -->
+        <div id="headerActions" class="header-actions"></div>
       </div>
-      <span class="banner-deco" aria-hidden="true">🐉</span>
-    </div>
-    <nav class="bq-nav" role="tablist" aria-label="Main navigation">
-      <button class="nav-tab active" data-target="#tab-overview" role="tab" aria-selected="true" aria-controls="tab-overview">
+    </header>
+
+    <!-- ── Tab panels ── -->
+    <main class="app-main">
+
+      <!-- COLLECTION TAB -->
+      <section id="tab-collection" class="tab-panel active" role="tabpanel">
+
+        <!-- Filters -->
+        <div class="filter-shell">
+          <input id="search" type="search" class="filter-input"
+                 placeholder="Search beasts…" autocomplete="off" />
+          <div class="filter-selects">
+            <select id="filterSaga"   class="filter-select"><option value="">All Sagas</option></select>
+            <select id="filterSeries" class="filter-select"><option value="">All Series</option></select>
+            <select id="filterStatus" class="filter-select">
+              <option value="all">All Books</option>
+              <option value="owned">Got It ✅</option>
+              <option value="read">Read ⚔️</option>
+              <option value="unowned">Need to Get</option>
+              <option value="unread">Not Read Yet</option>
+            </select>
+          </div>
+          <div class="filter-btns">
+            <button id="btnExpandAll"   class="filter-btn">▼ Expand All</button>
+            <button id="btnCollapseAll" class="filter-btn">▲ Collapse All</button>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results"></div>
+      </section>
+
+      <!-- PROGRESS TAB -->
+      <section id="tab-progress" class="tab-panel" role="tabpanel">
+
+        <div class="progress-page">
+
+          <!-- Ring hero -->
+          <div class="ring-hero">
+            <div class="ring-wrap">
+              <svg class="ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="50"/>
+                <circle id="statRingFill" class="ring-fill" cx="60" cy="60" r="50"/>
+              </svg>
+              <div class="ring-inner">
+                <span id="statPct" class="ring-pct">0%</span>
+                <span class="ring-label">Quest Done</span>
+              </div>
+            </div>
+            <p id="statMotivation" class="ring-motivation"></p>
+          </div>
+
+          <!-- Three counters -->
+          <div class="counters-row">
+            <div class="counter-card">
+              <div class="counter-icon">📚</div>
+              <div id="statTotal" class="counter-num">0</div>
+              <div class="counter-label">Total Beasts</div>
+            </div>
+            <div class="counter-card counter-card--gold">
+              <div class="counter-icon">🛡️</div>
+              <div id="statOwned" class="counter-num">0</div>
+              <div class="counter-label">Got It</div>
+            </div>
+            <div class="counter-card counter-card--red">
+              <div class="counter-icon">⚔️</div>
+              <div id="statRead" class="counter-num">0</div>
+              <div class="counter-label">Read It</div>
+            </div>
+          </div>
+
+          <!-- Saga breakdown -->
+          <div class="section-head">
+            <span class="section-head-title">By Saga</span>
+            <div class="section-head-btns">
+              <button id="btnStatsExpandAll"   class="filter-btn">▼</button>
+              <button id="btnStatsCollapseAll" class="filter-btn">▲</button>
+            </div>
+          </div>
+          <div id="sagaBreakdown" class="saga-breakdown"></div>
+        </div>
+      </section>
+
+      <!-- TROPHIES TAB -->
+      <section id="tab-trophies" class="tab-panel" role="tabpanel">
+        <div class="trophies-page">
+          <div id="achNextQuest"></div>
+          <div class="trophy-section">
+            <div class="section-head">
+              <span class="section-head-title">🏅 All Trophies</span>
+            </div>
+            <div id="achGrid" class="trophy-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS TAB -->
+      <section id="tab-settings" class="tab-panel" role="tabpanel">
+        <div class="settings-page">
+
+          <div class="settings-block">
+            <div class="settings-block-head">
+              <h3>📚 Book Catalogue</h3>
+              <p>Import or export your list of books</p>
+            </div>
+            <div class="settings-block-body">
+              <button id="btnImportBooks"    class="settings-btn">📥 Import Books (JSON)</button>
+              <button id="btnImportBooksCSV" class="settings-btn">📥 Import Books (CSV)</button>
+              <button id="btnExportBooks"    class="settings-btn">📤 Export Books</button>
+            </div>
+          </div>
+
+          <div class="settings-block">
+            <div class="settings-block-head">
+              <h3>⚔️ Quest Progress</h3>
+              <p>Back up or restore which books you own and have read</p>
+            </div>
+            <div class="settings-block-body">
+              <button id="btnImportState" class="settings-btn">📥 Import Progress</button>
+              <button id="btnExportState" class="settings-btn">📤 Save Progress</button>
+            </div>
+          </div>
+
+          <div class="settings-block settings-block--danger">
+            <div class="settings-block-head">
+              <h3>⚠️ Danger Zone</h3>
+              <p>This cannot be undone!</p>
+            </div>
+            <div class="settings-block-body">
+              <button id="btnClearState" class="settings-btn settings-btn--danger">🗑️ Clear All Progress</button>
+            </div>
+          </div>
+
+        </div>
+        <input id="hiddenFile" type="file" style="display:none" />
+      </section>
+
+    </main>
+
+    <!-- ── Bottom navigation ── -->
+    <nav class="bottom-nav" role="tablist" aria-label="Main navigation">
+      <button class="nav-btn active" data-target="#tab-collection" role="tab" aria-selected="true">
         <span class="nav-icon">📚</span>
         <span class="nav-label">My Books</span>
       </button>
-      <button class="nav-tab" data-target="#tab-stats" role="tab" aria-selected="false" aria-controls="tab-stats">
+      <button class="nav-btn" data-target="#tab-progress" role="tab" aria-selected="false">
         <span class="nav-icon">⚔️</span>
         <span class="nav-label">Progress</span>
       </button>
-      <button class="nav-tab" data-target="#tab-achievements" role="tab" aria-selected="false" aria-controls="tab-achievements">
+      <button class="nav-btn" data-target="#tab-trophies" role="tab" aria-selected="false">
         <span class="nav-icon">🏆</span>
         <span class="nav-label">Trophies</span>
       </button>
-      <button class="nav-tab" data-target="#tab-settings" role="tab" aria-selected="false" aria-controls="tab-settings">
+      <button class="nav-btn" data-target="#tab-settings" role="tab" aria-selected="false">
         <span class="nav-icon">⚙️</span>
         <span class="nav-label">Settings</span>
       </button>
     </nav>
-  </header>
 
-  <!-- ── Tab Panels ── -->
-  <main class="bq-main">
-
-    <!-- MY BOOKS TAB -->
-    <section id="tab-overview" class="tab-panel active" role="tabpanel">
-      <div class="filter-bar">
-        <input id="search" type="search" class="filter-search" placeholder="🔍 Search for a beast..." autocomplete="off" />
-        <div class="filter-row">
-          <select id="filterSaga" class="filter-select">
-            <option value="">All Sagas</option>
-          </select>
-          <select id="filterSeries" class="filter-select">
-            <option value="">All Series</option>
-          </select>
-          <select id="filterStatus" class="filter-select">
-            <option value="all">All Books</option>
-            <option value="owned">Got It ✅</option>
-            <option value="read">Read It ⚔️</option>
-            <option value="unowned">Need to Get</option>
-            <option value="unread">Not Read Yet</option>
-          </select>
-        </div>
-        <div class="filter-actions">
-          <button id="btnExpandAll" class="btn-xs">▼ Expand All</button>
-          <button id="btnCollapseAll" class="btn-xs">▲ Collapse All</button>
-        </div>
-      </div>
-      <div id="results" class="results-container"></div>
-    </section>
-
-    <!-- PROGRESS TAB -->
-    <section id="tab-stats" class="tab-panel" role="tabpanel">
-
-      <!-- Ring hero -->
-      <div class="stats-hero">
-        <div class="ring-card">
-          <div class="ring-wrap">
-            <svg class="ring-svg" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="ring-track" cx="60" cy="60" r="50"/>
-              <circle id="statRingFill" class="ring-fill" cx="60" cy="60" r="50"/>
-            </svg>
-            <div class="ring-center">
-              <span id="statPct" class="ring-pct">0%</span>
-              <span class="ring-subtitle">Quest Done</span>
-            </div>
-          </div>
-          <p id="statMotivation" class="ring-motivation"></p>
-        </div>
-      </div>
-
-      <!-- Three stat counters -->
-      <div class="stats-row">
-        <div class="stat-tile">
-          <div class="stat-tile-icon">📚</div>
-          <div class="stat-tile-label">Total Beasts</div>
-          <div id="statTotal" class="stat-tile-num">0</div>
-        </div>
-        <div class="stat-tile stat-tile--gold">
-          <div class="stat-tile-icon">🛡️</div>
-          <div class="stat-tile-label">Got It</div>
-          <div id="statOwned" class="stat-tile-num">0</div>
-        </div>
-        <div class="stat-tile stat-tile--crimson">
-          <div class="stat-tile-icon">⚔️</div>
-          <div class="stat-tile-label">Read It</div>
-          <div id="statRead" class="stat-tile-num">0</div>
-        </div>
-      </div>
-
-      <!-- Saga breakdown -->
-      <div class="breakdown-controls">
-        <button id="btnStatsExpandAll" class="btn-xs">▼ Expand All</button>
-        <button id="btnStatsCollapseAll" class="btn-xs">▲ Collapse All</button>
-      </div>
-      <div id="sagaBreakdown" class="saga-breakdown-grid"></div>
-    </section>
-
-    <!-- TROPHIES TAB -->
-    <section id="tab-achievements" class="tab-panel" role="tabpanel">
-      <div id="achNextQuest" class="ach-next-wrap"></div>
-      <div class="ach-all-section">
-        <div class="ach-all-header">🏅 All Trophies</div>
-        <div id="achGrid" class="ach-grid"></div>
-      </div>
-    </section>
-
-    <!-- SETTINGS TAB -->
-    <section id="tab-settings" class="tab-panel" role="tabpanel">
-      <div class="settings-stack">
-
-        <div class="settings-card">
-          <div class="settings-card-head">
-            <div class="settings-card-title">📚 Book Catalogue</div>
-            <div class="settings-card-desc">Import or export your list of Beast Quest books</div>
-          </div>
-          <div class="settings-card-body">
-            <button id="btnImportBooks"    class="btn-setting">📥 Import Books (JSON)</button>
-            <button id="btnImportBooksCSV" class="btn-setting">📥 Import Books (CSV)</button>
-            <button id="btnExportBooks"    class="btn-setting">📤 Export Books</button>
-          </div>
-        </div>
-
-        <div class="settings-card">
-          <div class="settings-card-head">
-            <div class="settings-card-title">⚔️ Quest Progress</div>
-            <div class="settings-card-desc">Save or restore which books you own and have read</div>
-          </div>
-          <div class="settings-card-body">
-            <button id="btnImportState" class="btn-setting">📥 Import Progress</button>
-            <button id="btnExportState" class="btn-setting">📤 Save Progress</button>
-          </div>
-        </div>
-
-        <div class="settings-card settings-card--danger">
-          <div class="settings-card-head">
-            <div class="settings-card-title">⚠️ Danger Zone</div>
-            <div class="settings-card-desc">This cannot be undone!</div>
-          </div>
-          <div class="settings-card-body">
-            <button id="btnClearState" class="btn-setting btn-setting--danger">🗑️ Clear All Progress</button>
-          </div>
-        </div>
-
-      </div>
-      <input id="hiddenFile" type="file" style="display:none" />
-    </section>
-
-  </main>
+  </div><!-- /app-shell -->
 
   <script type="module" src="./app/main.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .catch(() => {});
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
       });
     }
   </script>
