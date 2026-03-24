@@ -2,207 +2,187 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My Beast Quest Collection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>My Beast Quest</title>
 
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#0e0c1c" />
+  <meta name="theme-color" content="#1a0c04" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="./assets/styles.css" />
-  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="body-dark">
+<body>
 
-  <!-- ── Main content (pb-28 always makes room for bottom nav) ── -->
-  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-28">
-
-    <!-- Header -->
-    <header class="mb-6">
-      <h1 class="text-3xl sm:text-4xl font-bold flex items-center gap-3">
-        <span>⚔️</span>
-        <span>My Beast Quest Collection</span>
-      </h1>
-      <p class="muted mt-1">Atlas's epic reading adventure 🐉</p>
-    </header>
-
-    <!-- OVERVIEW TAB -->
-    <section id="tab-overview" class="tab-panel block" role="tabpanel" aria-labelledby="tabOverview">
-      <section class="panel rounded-xl shadow-sm border brand-border p-3 sm:p-5 mb-4 sticky-toolbar">
-        <!-- Always-visible quick search -->
-        <div class="mb-3">
-          <input id="search" type="text" placeholder="🔍 Search beasts…" class="w-full rounded-lg input" />
-        </div>
-        <details id="filtersCollapse" class="group">
-          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm muted hover:text-[color:var(--text)]">
-            <span class="badge">⚙️ More filters</span>
-            <svg class="chev w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </summary>
-          <div class="mt-3 grid gap-3 sm:grid-cols-3 lg:gap-4 items-end">
-            <label class="block">
-              <span class="block text-sm font-medium muted">Saga</span>
-              <select id="filterSaga" class="mt-1 w-full rounded-lg input">
-                <option value="">All sagas</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="block text-sm font-medium muted">Series</span>
-              <select id="filterSeries" class="mt-1 w-full rounded-lg input">
-                <option value="">All series</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="block text-sm font-medium muted">Status</span>
-              <select id="filterStatus" class="mt-1 w-full rounded-lg input">
-                <option value="all">All books</option>
-                <option value="owned">Got it ⚔️</option>
-                <option value="read">Read it 🔥</option>
-                <option value="unowned">Don't have yet</option>
-                <option value="unread">Not read yet</option>
-              </select>
-            </label>
-          </div>
-        </details>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button id="btnExpandAll"   class="btn">⬇️ Expand all</button>
-          <button id="btnCollapseAll" class="btn">⬆️ Collapse all</button>
-        </div>
-      </section>
-      <div id="results" class="space-y-8"></div>
-    </section>
-
-    <!-- STATS TAB -->
-    <section id="tab-stats" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabStats">
-      <div class="grid gap-6">
-
-        <!-- Top 4 stat cards -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="panel rounded-2xl border brand-border p-5 text-center">
-            <div class="text-2xl mb-1">📚</div>
-            <div class="text-xs muted cinzel uppercase tracking-widest">Total Beasts</div>
-            <div id="statTotal" class="text-4xl font-bold stat-val mt-1">0</div>
-          </div>
-          <div class="panel rounded-2xl border brand-border p-5 text-center">
-            <div class="text-2xl mb-1">🛡️</div>
-            <div class="text-xs muted cinzel uppercase tracking-widest">Seized</div>
-            <div id="statOwned" class="text-4xl font-bold stat-val mt-1" style="color:var(--gold)">0</div>
-          </div>
-          <div class="panel rounded-2xl border brand-border p-5 text-center">
-            <div class="text-2xl mb-1">🔥</div>
-            <div class="text-xs muted cinzel uppercase tracking-widest">Defeated</div>
-            <div id="statRead" class="text-4xl font-bold stat-val mt-1" style="color:var(--fire)">0</div>
-          </div>
-          <!-- Circular ring card -->
-          <div class="panel rounded-2xl border brand-border p-5 flex flex-col items-center justify-center">
-            <div class="stat-ring-wrap">
-              <svg class="stat-ring" width="100" height="100" viewBox="0 0 120 120" aria-hidden="true">
-                <circle class="ring-track" cx="60" cy="60" r="50"/>
-                <circle id="statRingFill" class="ring-fill" cx="60" cy="60" r="50"/>
-              </svg>
-              <div class="stat-ring-center">
-                <span id="statPct" class="text-lg font-bold cinzel" style="color:var(--gold)">0%</span>
-              </div>
-            </div>
-            <div class="text-xs muted cinzel uppercase tracking-widest mt-2 text-center">Quest Progress</div>
-          </div>
-        </section>
-
-        <!-- Motivation -->
-        <div id="statMotivation" class="text-center text-sm muted italic panel rounded-xl border brand-border px-4 py-3"></div>
-
-        <!-- Expand/collapse controls -->
-        <div class="flex flex-wrap gap-2 justify-end">
-          <button id="btnStatsExpandAll"   class="btn">⬇️ Expand all sagas</button>
-          <button id="btnStatsCollapseAll" class="btn">⬆️ Collapse all sagas</button>
-        </div>
-
-        <div id="sagaBreakdown" class="grid gap-4"></div>
+  <!-- ── Header + Navigation ── -->
+  <header class="bq-header">
+    <div class="bq-banner">
+      <span class="banner-deco" aria-hidden="true">⚔</span>
+      <div class="banner-text">
+        <h1 class="banner-title">Beast Quest</h1>
+        <p class="banner-sub">My Bestiary</p>
       </div>
+      <span class="banner-deco" aria-hidden="true">🐉</span>
+    </div>
+    <nav class="bq-nav" role="tablist" aria-label="Main navigation">
+      <button class="nav-tab active" data-target="#tab-overview" role="tab" aria-selected="true" aria-controls="tab-overview">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">My Books</span>
+      </button>
+      <button class="nav-tab" data-target="#tab-stats" role="tab" aria-selected="false" aria-controls="tab-stats">
+        <span class="nav-icon">⚔️</span>
+        <span class="nav-label">Progress</span>
+      </button>
+      <button class="nav-tab" data-target="#tab-achievements" role="tab" aria-selected="false" aria-controls="tab-achievements">
+        <span class="nav-icon">🏆</span>
+        <span class="nav-label">Trophies</span>
+      </button>
+      <button class="nav-tab" data-target="#tab-settings" role="tab" aria-selected="false" aria-controls="tab-settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ── Tab Panels ── -->
+  <main class="bq-main">
+
+    <!-- MY BOOKS TAB -->
+    <section id="tab-overview" class="tab-panel active" role="tabpanel">
+      <div class="filter-bar">
+        <input id="search" type="search" class="filter-search" placeholder="🔍 Search for a beast..." autocomplete="off" />
+        <div class="filter-row">
+          <select id="filterSaga" class="filter-select">
+            <option value="">All Sagas</option>
+          </select>
+          <select id="filterSeries" class="filter-select">
+            <option value="">All Series</option>
+          </select>
+          <select id="filterStatus" class="filter-select">
+            <option value="all">All Books</option>
+            <option value="owned">Got It ✅</option>
+            <option value="read">Read It ⚔️</option>
+            <option value="unowned">Need to Get</option>
+            <option value="unread">Not Read Yet</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="btnExpandAll" class="btn-xs">▼ Expand All</button>
+          <button id="btnCollapseAll" class="btn-xs">▲ Collapse All</button>
+        </div>
+      </div>
+      <div id="results" class="results-container"></div>
     </section>
 
-    <!-- ACHIEVEMENTS TAB -->
-    <section id="tab-achievements" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabAchievements">
-      <div class="grid gap-4">
-        <div id="achNextQuest"></div>
-        <section class="panel rounded-xl border brand-border shadow-sm">
-          <div class="px-4 py-3 rounded-t-xl header-grad">
-            <h3 class="text-lg font-bold">🏅 All Achievements</h3>
+    <!-- PROGRESS TAB -->
+    <section id="tab-stats" class="tab-panel" role="tabpanel">
+
+      <!-- Ring hero -->
+      <div class="stats-hero">
+        <div class="ring-card">
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="ring-track" cx="60" cy="60" r="50"/>
+              <circle id="statRingFill" class="ring-fill" cx="60" cy="60" r="50"/>
+            </svg>
+            <div class="ring-center">
+              <span id="statPct" class="ring-pct">0%</span>
+              <span class="ring-subtitle">Quest Done</span>
+            </div>
           </div>
-          <div class="p-4">
-            <div id="achGrid"></div>
-          </div>
-        </section>
+          <p id="statMotivation" class="ring-motivation"></p>
+        </div>
+      </div>
+
+      <!-- Three stat counters -->
+      <div class="stats-row">
+        <div class="stat-tile">
+          <div class="stat-tile-icon">📚</div>
+          <div class="stat-tile-label">Total Beasts</div>
+          <div id="statTotal" class="stat-tile-num">0</div>
+        </div>
+        <div class="stat-tile stat-tile--gold">
+          <div class="stat-tile-icon">🛡️</div>
+          <div class="stat-tile-label">Got It</div>
+          <div id="statOwned" class="stat-tile-num">0</div>
+        </div>
+        <div class="stat-tile stat-tile--crimson">
+          <div class="stat-tile-icon">⚔️</div>
+          <div class="stat-tile-label">Read It</div>
+          <div id="statRead" class="stat-tile-num">0</div>
+        </div>
+      </div>
+
+      <!-- Saga breakdown -->
+      <div class="breakdown-controls">
+        <button id="btnStatsExpandAll" class="btn-xs">▼ Expand All</button>
+        <button id="btnStatsCollapseAll" class="btn-xs">▲ Collapse All</button>
+      </div>
+      <div id="sagaBreakdown" class="saga-breakdown-grid"></div>
+    </section>
+
+    <!-- TROPHIES TAB -->
+    <section id="tab-achievements" class="tab-panel" role="tabpanel">
+      <div id="achNextQuest" class="ach-next-wrap"></div>
+      <div class="ach-all-section">
+        <div class="ach-all-header">🏅 All Trophies</div>
+        <div id="achGrid" class="ach-grid"></div>
       </div>
     </section>
 
     <!-- SETTINGS TAB -->
-    <section id="tab-settings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabSettings">
-      <div class="grid gap-5">
+    <section id="tab-settings" class="tab-panel" role="tabpanel">
+      <div class="settings-stack">
 
-        <!-- Book catalogue -->
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <h3 class="text-base font-bold cinzel">📚 Book Catalogue</h3>
-            <p class="text-xs muted mt-1">Import or export the list of Beast Quest books</p>
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div class="settings-card-title">📚 Book Catalogue</div>
+            <div class="settings-card-desc">Import or export your list of Beast Quest books</div>
           </div>
-          <div class="settings-section-body flex flex-wrap gap-3">
-            <button id="btnImportBooks"    class="btn">📥 Import JSON</button>
-            <button id="btnImportBooksCSV" class="btn">📥 Import CSV</button>
-            <button id="btnExportBooks"    class="btn">📤 Export JSON</button>
+          <div class="settings-card-body">
+            <button id="btnImportBooks"    class="btn-setting">📥 Import Books (JSON)</button>
+            <button id="btnImportBooksCSV" class="btn-setting">📥 Import Books (CSV)</button>
+            <button id="btnExportBooks"    class="btn-setting">📤 Export Books</button>
           </div>
         </div>
 
-        <!-- Quest progress -->
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <h3 class="text-base font-bold cinzel">⚔️ Quest Progress</h3>
-            <p class="text-xs muted mt-1">Save or restore your owned &amp; read progress</p>
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div class="settings-card-title">⚔️ Quest Progress</div>
+            <div class="settings-card-desc">Save or restore which books you own and have read</div>
           </div>
-          <div class="settings-section-body flex flex-wrap gap-3">
-            <button id="btnImportState" class="btn">📥 Import Progress</button>
-            <button id="btnExportState" class="btn">📤 Export Progress</button>
-          </div>
-        </div>
-
-        <!-- Danger zone -->
-        <div class="settings-section settings-section-danger">
-          <div class="settings-section-head">
-            <h3 class="text-base font-bold" style="color:var(--danger)">⚠️ Danger Zone</h3>
-            <p class="text-xs muted mt-1">This cannot be undone!</p>
-          </div>
-          <div class="settings-section-body">
-            <button id="btnClearState" class="btn btn-danger">🗑️ Clear All Progress</button>
+          <div class="settings-card-body">
+            <button id="btnImportState" class="btn-setting">📥 Import Progress</button>
+            <button id="btnExportState" class="btn-setting">📤 Save Progress</button>
           </div>
         </div>
 
-        <input id="hiddenFile" type="file" class="hidden" />
+        <div class="settings-card settings-card--danger">
+          <div class="settings-card-head">
+            <div class="settings-card-title">⚠️ Danger Zone</div>
+            <div class="settings-card-desc">This cannot be undone!</div>
+          </div>
+          <div class="settings-card-body">
+            <button id="btnClearState" class="btn-setting btn-setting--danger">🗑️ Clear All Progress</button>
+          </div>
+        </div>
+
       </div>
+      <input id="hiddenFile" type="file" style="display:none" />
     </section>
-  </div>
 
-  <!-- ── Bottom navigation (always visible) ─────────────── -->
-  <nav class="bottom-nav" role="tablist" aria-label="Main navigation">
-    <button id="tabOverview" class="tab-btn active" data-target="#tab-overview" aria-selected="true">
-      <span class="bn-icon">🗺️</span><span>Collection</span>
-    </button>
-    <button id="tabStats" class="tab-btn inactive" data-target="#tab-stats" aria-selected="false">
-      <span class="bn-icon">📊</span><span>Stats</span>
-    </button>
-    <button id="tabAchievements" class="tab-btn inactive" data-target="#tab-achievements" aria-selected="false">
-      <span class="bn-icon">🏆</span><span>Quests</span>
-    </button>
-    <button id="tabSettings" class="tab-btn inactive" data-target="#tab-settings" aria-selected="false">
-      <span class="bn-icon">⚙️</span><span>Settings</span>
-    </button>
-  </nav>
+  </main>
 
   <script type="module" src="./app/main.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .catch(err => console.info('SW registration failed', err));
+          .catch(() => {});
       });
     }
   </script>

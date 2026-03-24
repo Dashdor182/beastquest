@@ -1,5 +1,5 @@
 // app/ui.js
-// Overview tab rendering, filters, and collapse/expand helpers
+// Collection tab rendering — The Bestiary redesign
 
 import {
   books, owned, read,
@@ -8,34 +8,36 @@ import {
   seriesKey, allSeriesKeysFromBooks, allSagaNamesFromBooks
 } from './state.js';
 
-/* ========= shared helpers ========= */
-export function escapeHtml(str){
-  return String(str ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+/* ── Shared helpers ─────────────────────────────────────── */
+export function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, s =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s])
+  );
 }
 
-// Stats tab element getters (imported by stats.js)
+// Element getters used by stats.js
 export const elStatTotal = () => document.getElementById('statTotal');
 export const elStatOwned = () => document.getElementById('statOwned');
 export const elStatRead  = () => document.getElementById('statRead');
 export const elStatPct   = () => document.getElementById('statPct');
 export const elStatBar   = () => document.getElementById('statBar');
 
-/* ========= filters ========= */
+/* ── Filter helpers ─────────────────────────────────────── */
 const elSearch = () => document.getElementById('search');
 const elSaga   = () => document.getElementById('filterSaga');
 const elSeries = () => document.getElementById('filterSeries');
 const elStatus = () => document.getElementById('filterStatus');
 
-function uniq(arr){ return [...new Set(arr)]; }
+function uniq(arr) { return [...new Set(arr)]; }
 
-function applyFilters(list){
+function applyFilters(list) {
   const q  = elSearch()?.value?.trim().toLowerCase() || '';
-  const fs = elSaga()?.value || '';
+  const fs = elSaga()?.value   || '';
   const fr = elSeries()?.value || '';
   const st = elStatus()?.value || 'all';
   return list.filter(b => {
-    if (q && !b.title.toLowerCase().includes(q)) return false;
-    if (fs && b.saga !== fs) return false;
+    if (q  && !b.title.toLowerCase().includes(q)) return false;
+    if (fs && b.saga   !== fs) return false;
     if (fr && b.series !== fr) return false;
     if (st === 'owned'   && !owned.has(b.id)) return false;
     if (st === 'read'    && !read.has(b.id))  return false;
@@ -45,61 +47,57 @@ function applyFilters(list){
   });
 }
 
-export function renderFiltersOptions(){
+export function renderFiltersOptions() {
   if (!books?.length) return;
-  const sagas = uniq(books.map(b=>b.saga)).filter(Boolean).sort();
-  if (elSaga()){
-    elSaga().innerHTML = '<option value="">All sagas</option>' +
-      sagas.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+
+  const sagas = uniq(books.map(b => b.saga)).filter(Boolean).sort();
+  if (elSaga()) {
+    elSaga().innerHTML = '<option value="">All Sagas</option>' +
+      sagas.map(s => `<option>${escapeHtml(s)}</option>`).join('');
   }
 
   const seriesOrder = new Map();
-  for (const b of books){
+  for (const b of books) {
     const name = b.series || 'Unknown';
-    let num = Number.POSITIVE_INFINITY;
-    const m = String(b.id||'').match(/S(\d+)/i);
-    if (m) num = parseInt(m[1], 10);
-    else if (typeof b.seriesIndex === 'number') num = b.seriesIndex;
-    else if (typeof b.number === 'number') num = b.number;
+    const m = String(b.id || '').match(/S(\d+)/i);
+    let num = m ? parseInt(m[1], 10)
+      : (typeof b.seriesIndex === 'number' ? b.seriesIndex
+        : typeof b.number === 'number' ? b.number : Number.POSITIVE_INFINITY);
     seriesOrder.set(name, Math.min(seriesOrder.get(name) ?? num, num));
   }
-  const seriesNames = [...new Set(books.map(b=>b.series).filter(Boolean))]
-    .sort((a,b)=>{
+  const seriesNames = [...new Set(books.map(b => b.series).filter(Boolean))]
+    .sort((a, b) => {
       const na = seriesOrder.get(a) ?? Number.MAX_SAFE_INTEGER;
       const nb = seriesOrder.get(b) ?? Number.MAX_SAFE_INTEGER;
-      if (na !== nb) return na - nb;
-      return a.localeCompare(b);
+      return na !== nb ? na - nb : a.localeCompare(b);
     });
 
-  if (elSeries()){
-    elSeries().innerHTML = '<option value="">All series</option>' +
-      seriesNames.map(s=>`<option>${escapeHtml(s)}</option>`).join('');
+  if (elSeries()) {
+    elSeries().innerHTML = '<option value="">All Series</option>' +
+      seriesNames.map(s => `<option>${escapeHtml(s)}</option>`).join('');
   }
 }
 
-/* ========= overview rendering ========= */
-const elResults = () => document.getElementById('results');
-
-function groupBySagaSeries(list){
+/* ── Grouping & aggregation ─────────────────────────────── */
+function groupBySagaSeries(list) {
   const map = new Map();
-  for (const b of list){
+  for (const b of list) {
     if (!map.has(b.saga)) map.set(b.saga, new Map());
     const sMap = map.get(b.saga);
     if (!sMap.has(b.series)) sMap.set(b.series, []);
     sMap.get(b.series).push(b);
   }
-  for (const [, sMap] of map){
-    for (const [series, arr] of sMap){
-      arr.sort((a,b)=> (a.seriesIndex ?? a.number ?? 0) - (b.seriesIndex ?? b.number ?? 0));
-      sMap.set(series, arr);
+  for (const [, sMap] of map) {
+    for (const [series, arr] of sMap) {
+      arr.sort((a, b) => (a.seriesIndex ?? a.number ?? 0) - (b.seriesIndex ?? b.number ?? 0));
     }
   }
   return map;
 }
 
-function seriesOrderForSaga(saga){
+function seriesOrderForSaga(saga) {
   const map = new Map();
-  for (const b of books.filter(x=>x.saga===saga)){
+  for (const b of books.filter(x => x.saga === saga)) {
     const name = b.series || 'Unknown';
     const m = String(b.id || '').match(/S([0-9]+)/i);
     let n = m ? parseInt(m[1], 10) : (Number.isFinite(b.seriesIndex) ? b.seriesIndex : b.number ?? 0);
@@ -109,259 +107,262 @@ function seriesOrderForSaga(saga){
   return map;
 }
 
-function encodeId(key){
-  return 'id-' + btoa(unescape(encodeURIComponent(String(key)))).replace(/[^a-z0-9]/gi,'');
-}
-
-function getSeriesAgg(saga, series){
+function getSeriesAgg(saga, series) {
   const arr = books.filter(b => b.saga === saga && b.series === series);
   const total = arr.length;
-  let own=0, rd=0; for(const b of arr){ if(owned.has(b.id)) own++; if(read.has(b.id)) rd++; }
-  return { total, own, rd, pctOwn: total? Math.round(own/total*100):0, pctRead: total? Math.round(rd/total*100):0 };
+  let own = 0, rd = 0;
+  for (const b of arr) { if (owned.has(b.id)) own++; if (read.has(b.id)) rd++; }
+  return {
+    total, own, rd,
+    pctOwn:  total ? Math.round(own / total * 100) : 0,
+    pctRead: total ? Math.round(rd  / total * 100) : 0,
+  };
 }
 
-function sagaAgg(saga){
+function sagaAgg(saga) {
   const arr = books.filter(b => b.saga === saga);
   const total = arr.length;
-  let own=0, rd=0; for(const b of arr){ if(owned.has(b.id)) own++; if(read.has(b.id)) rd++; }
-  return { total, own, rd, pctOwn: total? Math.round(own/total*100):0, pctRead: total? Math.round(rd/total*100):0 };
+  let own = 0, rd = 0;
+  for (const b of arr) { if (owned.has(b.id)) own++; if (read.has(b.id)) rd++; }
+  return {
+    total, own, rd,
+    pctOwn:  total ? Math.round(own / total * 100) : 0,
+    pctRead: total ? Math.round(rd  / total * 100) : 0,
+  };
 }
 
-/**
- * Render Overview
- * @param {(kind:'own'|'read', id:string, checked:boolean)=>void} onAfterCardHook
- */
-export function render(onAfterCardHook){
-  const container = elResults();
+/* ── Main render ────────────────────────────────────────── */
+export function render(onAfterCardHook) {
+  const container = document.getElementById('results');
   if (!container) return;
 
   const filtered = applyFilters(books);
   container.innerHTML = '';
-  if (!filtered.length){
+
+  if (!filtered.length) {
     container.innerHTML = `
-      <div class="text-center py-16">
-        <div class="text-5xl mb-4">🐉</div>
-        <div class="text-lg font-bold mb-1">No beasts found on this quest!</div>
-        <div class="muted text-sm">Try a different search or filter.</div>
+      <div class="empty-state">
+        <div class="empty-state-icon">🐉</div>
+        <div class="empty-state-title">No beasts found on this quest!</div>
+        <div class="empty-state-sub">Try a different search or filter.</div>
       </div>`;
     return;
   }
 
   const grouped = groupBySagaSeries(filtered);
 
-  for (const [saga, seriesMap] of grouped){
-    const sagaKey = saga;
-    const isSagaCollapsed = collapsedSagas.has(sagaKey);
-
+  for (const [saga, seriesMap] of grouped) {
+    const isSagaCollapsed = collapsedSagas.has(saga);
     const sAgg = sagaAgg(saga);
-    const bodyId = encodeId(`saga-body::${sagaKey}`);
 
-    const sagaSection = document.createElement('section');
-    sagaSection.className = 'space-y-4 sm:space-y-5';
+    const sagaSection = document.createElement('div');
+    sagaSection.className = 'saga-section';
 
-    const header = document.createElement('div');
-    header.className = 'px-4 py-3 rounded-t-xl header-grad flex items-center justify-between sticky top-0 sm:top-2 z-20 cursor-pointer';
-    header.setAttribute('role','button');
-    header.setAttribute('tabindex','0');
-    header.setAttribute('aria-controls', bodyId);
-    header.setAttribute('aria-expanded', String(!isSagaCollapsed));
-    header.dataset.sagaToggle = sagaKey;
+    /* ── Saga header ── */
+    const sagaHeader = document.createElement('div');
+    sagaHeader.className = 'saga-header' + (isSagaCollapsed ? ' saga-header--collapsed' : '');
+    sagaHeader.setAttribute('role', 'button');
+    sagaHeader.setAttribute('tabindex', '0');
+    sagaHeader.setAttribute('aria-expanded', String(!isSagaCollapsed));
+    sagaHeader.dataset.sagaToggle = saga;
 
-    const chips = `
-      <div class="flex gap-2 shrink-0">
-        <span class="badge badge-read">⚔️ ${sAgg.rd}/${sAgg.total}</span>
-        <span class="badge badge-own">🛡️ ${sAgg.own}/${sAgg.total}</span>
-      </div>`;
-
-    const perSagaBtns = `
-      <div class="flex items-center gap-2 ${isSagaCollapsed ? 'invisible' : ''}" data-saga-series-controls>
-        <button type="button" class="btn px-2 py-1 text-xs" data-saga-expand="${escapeHtml(sagaKey)}">Expand series</button>
-        <button type="button" class="btn px-2 py-1 text-xs" data-saga-collapse="${escapeHtml(sagaKey)}">Collapse series</button>
-      </div>`;
-
-    header.innerHTML = `
-      <h2 class="text-xl sm:text-2xl font-bold tracking-wide">⚔️ ${escapeHtml(saga)}</h2>
-      <div class="flex items-center gap-3">${perSagaBtns}${chips}</div>
+    sagaHeader.innerHTML = `
+      <div class="saga-header-left">
+        <span class="saga-chevron ${isSagaCollapsed ? 'saga-chevron--up' : ''}">▼</span>
+        <span class="saga-title">${escapeHtml(saga)}</span>
+      </div>
+      <div class="saga-header-right">
+        <div class="saga-series-btns" data-saga-sub-btns>
+          <button type="button" class="saga-series-btn" data-saga-expand="${escapeHtml(saga)}">↕ Expand series</button>
+          <button type="button" class="saga-series-btn" data-saga-collapse="${escapeHtml(saga)}">↕ Collapse series</button>
+        </div>
+        <span class="saga-chip saga-chip--gold">🛡 ${sAgg.own}/${sAgg.total}</span>
+        <span class="saga-chip saga-chip--crimson">⚔ ${sAgg.rd}/${sAgg.total}</span>
+      </div>
     `;
 
-    const body = document.createElement('div');
-    body.id = bodyId;
-    body.className = `p-4 panel rounded-b-xl border brand-border shadow-sm space-y-4 sm:space-y-5 ${isSagaCollapsed ? 'hidden' : ''}`;
+    /* ── Saga body ── */
+    const sagaBody = document.createElement('div');
+    sagaBody.className = 'saga-body' + (isSagaCollapsed ? ' saga-body--hidden' : '');
 
-    const toggleSaga = ()=>{
-      const nowHidden = body.classList.toggle('hidden');
-      header.setAttribute('aria-expanded', String(!nowHidden));
-      const ctrl = header.querySelector('[data-saga-series-controls]');
-      if (ctrl) ctrl.classList.toggle('invisible', nowHidden);
-      if (nowHidden) collapsedSagas.add(sagaKey); else collapsedSagas.delete(sagaKey);
+    /* Toggle saga */
+    const toggleSaga = () => {
+      const nowCollapsed = !sagaBody.classList.contains('saga-body--hidden');
+      sagaBody.classList.toggle('saga-body--hidden', nowCollapsed);
+      sagaHeader.setAttribute('aria-expanded', String(!nowCollapsed));
+      sagaHeader.classList.toggle('saga-header--collapsed', nowCollapsed);
+      const chev = sagaHeader.querySelector('.saga-chevron');
+      if (chev) chev.classList.toggle('saga-chevron--up', nowCollapsed);
+      if (nowCollapsed) collapsedSagas.add(saga); else collapsedSagas.delete(saga);
       saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
     };
-    header.addEventListener('click', toggleSaga);
-    header.addEventListener('keydown', (e)=>{ if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleSaga(); }});
+    sagaHeader.addEventListener('click', toggleSaga);
+    sagaHeader.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSaga(); } });
 
-    header.querySelector(`[data-saga-expand="${CSS.escape(sagaKey)}"]`)?.addEventListener('click', (e)=>{
+    /* Expand/collapse series within saga */
+    sagaHeader.querySelector(`[data-saga-expand]`)?.addEventListener('click', e => {
       e.stopPropagation();
-      for (const series of seriesMap.keys()){ collapsedSeries.delete(seriesKey(sagaKey, series)); }
+      for (const series of seriesMap.keys()) collapsedSeries.delete(seriesKey(saga, series));
       saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-      body.querySelectorAll('[data-series-body]').forEach(n => n.classList.remove('hidden'));
-      body.querySelectorAll('[data-series-toggle-visual] span')?.forEach(s=> s.textContent='Collapse');
-      body.querySelectorAll('[data-series-toggle-visual] svg')?.forEach(svg=> svg.style.transform='rotate(0deg)');
+      sagaBody.querySelectorAll('.series-body').forEach(n => n.classList.remove('series-body--hidden'));
+      sagaBody.querySelectorAll('.series-chevron').forEach(c => c.classList.remove('series-chevron--up'));
     });
-    header.querySelector(`[data-saga-collapse="${CSS.escape(sagaKey)}"]`)?.addEventListener('click', (e)=>{
+    sagaHeader.querySelector(`[data-saga-collapse]`)?.addEventListener('click', e => {
       e.stopPropagation();
-      for (const series of seriesMap.keys()){ collapsedSeries.add(seriesKey(sagaKey, series)); }
+      for (const series of seriesMap.keys()) collapsedSeries.add(seriesKey(saga, series));
       saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-      body.querySelectorAll('[data-series-body]').forEach(n => n.classList.add('hidden'));
-      body.querySelectorAll('[data-series-toggle-visual] span')?.forEach(s=> s.textContent='Expand');
-      body.querySelectorAll('[data-series-toggle-visual] svg')?.forEach(svg=> svg.style.transform='rotate(-180deg)');
+      sagaBody.querySelectorAll('.series-body').forEach(n => n.classList.add('series-body--hidden'));
+      sagaBody.querySelectorAll('.series-chevron').forEach(c => c.classList.add('series-chevron--up'));
     });
 
+    /* ── Series sections ── */
     const orderMap = seriesOrderForSaga(saga);
-    const seriesEntries = [...seriesMap.entries()].sort((a,b)=>{
+    const seriesEntries = [...seriesMap.entries()].sort((a, b) => {
       const oa = orderMap.get(a[0]) ?? 0;
       const ob = orderMap.get(b[0]) ?? 0;
-      if (oa !== ob) return oa - ob;
-      return a[0].localeCompare(b[0]);
+      return oa !== ob ? oa - ob : a[0].localeCompare(b[0]);
     });
 
-    for (const [series, items] of seriesEntries){
+    for (const [series, items] of seriesEntries) {
       const sKey = seriesKey(saga, series);
-      const isSeriesCollapsed = collapsedSeries.has(sKey);
-      const sBodyId = encodeId(`series-body::${sKey}`);
+      const isCollapsed = collapsedSeries.has(sKey);
+      const agg = getSeriesAgg(saga, series);
       const seriesNum = orderMap.get(series) ?? 0;
 
-      const section = document.createElement('section');
-      section.className = 'rounded-xl border brand-border shadow-sm';
+      const seriesSection = document.createElement('div');
+      seriesSection.className = 'series-section';
 
-      const sHeader = document.createElement('div');
-      sHeader.className = 'px-4 py-3 rounded-t-xl header-grad flex items-center justify-between cursor-pointer';
-      sHeader.setAttribute('role','button');
-      sHeader.setAttribute('tabindex','0');
-      sHeader.dataset.seriesToggle = sKey;
-      sHeader.setAttribute('aria-controls', sBodyId);
-      sHeader.setAttribute('aria-expanded', String(!isSeriesCollapsed));
+      /* Series header */
+      const seriesHeader = document.createElement('div');
+      seriesHeader.className = 'series-header';
+      seriesHeader.setAttribute('role', 'button');
+      seriesHeader.setAttribute('tabindex', '0');
+      seriesHeader.setAttribute('aria-expanded', String(!isCollapsed));
+      seriesHeader.dataset.seriesToggle = sKey;
 
-      const actionText = isSeriesCollapsed ? 'Expand' : 'Collapse';
-      sHeader.innerHTML = `
-        <h3 class="text-base sm:text-lg font-bold">Series ${seriesNum || ''}: ${escapeHtml(series)}</h3>
-        <div class="inline-flex items-center gap-2 text-sm muted" data-series-toggle-visual>
-          <span>${actionText}</span>
-          <svg class="chev w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      seriesHeader.innerHTML = `
+        <span class="series-title">Series ${seriesNum || ''}: ${escapeHtml(series)}</span>
+        <div class="series-meta">
+          <span class="series-count">${agg.rd}/${agg.total} read</span>
+          <span class="series-chevron ${isCollapsed ? 'series-chevron--up' : ''}">▼</span>
         </div>
       `;
-      const chevron = sHeader.querySelector('[data-series-toggle-visual] svg');
-      if (chevron && isSeriesCollapsed) chevron.style.transform = 'rotate(-180deg)';
 
-      const sBody = document.createElement('div');
-      sBody.id = sBodyId;
-      sBody.dataset.seriesBody = '1';
-      sBody.className = `p-4 panel rounded-b-xl ${isSeriesCollapsed ? 'hidden' : ''}`;
+      /* Series body */
+      const seriesBody = document.createElement('div');
+      seriesBody.className = 'series-body' + (isCollapsed ? ' series-body--hidden' : '');
+      seriesBody.setAttribute('data-series-body', '1');
 
-      // per-series mini progress bars
-      const agg = getSeriesAgg(saga, series);
-      const miniWrap = document.createElement('div');
-      miniWrap.className = 'mb-3';
-      miniWrap.innerHTML = `
-        <div class="grid sm:grid-cols-2 gap-2 text-sm">
-          <div>
-            <div class="flex justify-between muted"><span>⚔️ Read</span><span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span></div>
-            <div class="progress progress-track mt-1"><div class="progress progress-read" style="width:${agg.pctRead}%"></div></div>
+      /* Progress bars */
+      const progressWrap = document.createElement('div');
+      progressWrap.className = 'series-progress-wrap';
+      progressWrap.innerHTML = `
+        <div class="series-progress-item">
+          <div class="series-progress-label">
+            <span>🛡 Got It</span>
+            <span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span>
           </div>
-          <div>
-            <div class="flex justify-between muted"><span>🛡️ Owned</span><span>${agg.own}/${agg.total} (${agg.pctOwn}%)</span></div>
-            <div class="progress progress-track mt-1"><div class="progress progress-own" style="width:${agg.pctOwn}%"></div></div>
+          <div class="quest-bar">
+            <div class="quest-bar-fill quest-bar-fill--gold" style="width:${agg.pctOwn}%"></div>
           </div>
-        </div>`;
-      sBody.appendChild(miniWrap);
+        </div>
+        <div class="series-progress-item">
+          <div class="series-progress-label">
+            <span>⚔ Read It</span>
+            <span>${agg.rd}/${agg.total} (${agg.pctRead}%)</span>
+          </div>
+          <div class="quest-bar">
+            <div class="quest-bar-fill quest-bar-fill--crimson" style="width:${agg.pctRead}%"></div>
+          </div>
+        </div>
+      `;
+      seriesBody.appendChild(progressWrap);
 
-      const grid = document.createElement('div');
-      grid.className = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3';
-      sBody.appendChild(grid);
+      /* Book rows */
+      const bookList = document.createElement('div');
+      bookList.className = 'book-list';
 
-      // book cards
-      for (const b of items){
+      for (const b of items) {
         const isOwned = owned.has(b.id);
         const isRead  = read.has(b.id);
-        const statusClass = (isOwned && isRead) ? 'card-complete'
-                          : isOwned ? 'card-owned'
-                          : isRead  ? 'card-read'
-                          : '';
+        const both    = isOwned && isRead;
 
-        const card = document.createElement('article');
-        card.className = `card p-3 sm:p-4 ${statusClass}`;
+        let rowClass = 'book-row';
+        if (both)    rowClass += ' book-row--complete';
+        else if (isOwned) rowClass += ' book-row--owned';
+        else if (isRead)  rowClass += ' book-row--read';
+
+        const row = document.createElement('div');
+        row.className = rowClass;
 
         const numLabel = b.number ? `#${b.number}` : b.id;
-        const starBadge = (isOwned && isRead) ? '<span class="card-star ml-1">⭐</span>' : '';
 
-        const top = document.createElement('div');
-        top.className = 'flex items-start justify-between gap-3 mb-2';
-        top.innerHTML = `
-          <h4 class="font-semibold leading-snug text-sm sm:text-base">${escapeHtml(b.title)}</h4>
-          <div class="flex items-center gap-1 shrink-0">
-            ${starBadge}
-            <span class="card-coin">${escapeHtml(numLabel)}</span>
+        row.innerHTML = `
+          <span class="book-num">${escapeHtml(numLabel)}</span>
+          <span class="book-title">${escapeHtml(b.title)}</span>
+          ${both ? '<span class="book-star">⭐</span>' : ''}
+          <div class="book-btns">
+            <button type="button" class="toggle-btn toggle-own ${isOwned ? 'on' : ''}" aria-pressed="${isOwned}">
+              🛡 ${isOwned ? 'Got it!' : 'Got it?'}
+            </button>
+            <button type="button" class="toggle-btn toggle-read ${isRead ? 'on' : ''}" aria-pressed="${isRead}">
+              ⚔ ${isRead ? 'Read it!' : 'Read it?'}
+            </button>
           </div>
         `;
-        card.appendChild(top);
 
-        const controls = document.createElement('div');
-        controls.className = 'mt-2 flex items-center gap-2';
-        controls.innerHTML = `
-          <button type="button" class="toggle-btn toggle-own ${isOwned ? 'on' : ''}" aria-pressed="${isOwned}">
-            ⚔️ ${isOwned ? 'Got it!' : 'Got it?'}
-          </button>
-          <button type="button" class="toggle-btn toggle-read ${isRead ? 'on' : ''}" aria-pressed="${isRead}">
-            🔥 ${isRead ? 'Read it!' : 'Read it?'}
-          </button>
-        `;
-        card.appendChild(controls);
-        grid.appendChild(card);
+        const ownBtn  = row.querySelector('.toggle-own');
+        const readBtn = row.querySelector('.toggle-read');
 
-        controls.querySelector('.toggle-own').addEventListener('click', ()=>{
+        ownBtn.addEventListener('click', () => {
+          ownBtn.classList.add('pop');
+          ownBtn.addEventListener('animationend', () => ownBtn.classList.remove('pop'), { once: true });
           onAfterCardHook?.('own', b.id, !owned.has(b.id));
         });
-        controls.querySelector('.toggle-read').addEventListener('click', ()=>{
+
+        readBtn.addEventListener('click', () => {
+          readBtn.classList.add('pop');
+          readBtn.addEventListener('animationend', () => readBtn.classList.remove('pop'), { once: true });
           onAfterCardHook?.('read', b.id, !read.has(b.id));
         });
+
+        bookList.appendChild(row);
       }
+      seriesBody.appendChild(bookList);
 
-      const toggleSeries = ()=>{
-        const nowHidden = sBody.classList.toggle('hidden');
-        sHeader.setAttribute('aria-expanded', String(!nowHidden));
-        if (nowHidden) collapsedSeries.add(sKey); else collapsedSeries.delete(sKey);
+      /* Toggle series */
+      const toggleSeries = () => {
+        const nowCollapsed = !seriesBody.classList.contains('series-body--hidden');
+        seriesBody.classList.toggle('series-body--hidden', nowCollapsed);
+        seriesHeader.setAttribute('aria-expanded', String(!nowCollapsed));
+        const chev = seriesHeader.querySelector('.series-chevron');
+        if (chev) chev.classList.toggle('series-chevron--up', nowCollapsed);
+        if (nowCollapsed) collapsedSeries.add(sKey); else collapsedSeries.delete(sKey);
         saveJSON(LS_KEYS.COLLAPSED, [...collapsedSeries]);
-
-        const vis = sHeader.querySelector('[data-series-toggle-visual]');
-        if (vis){
-          const span = vis.querySelector('span');
-          const svg  = vis.querySelector('svg');
-          if (span) span.textContent = nowHidden ? 'Expand' : 'Collapse';
-          if (svg)  svg.style.transform = nowHidden ? 'rotate(-180deg)' : 'rotate(0deg)';
-        }
       };
-      sHeader.addEventListener('click', toggleSeries);
-      sHeader.addEventListener('keydown', (e)=>{ if (e.key==='Enter'||e.key===' ') { e.preventDefault(); toggleSeries(); }});
+      seriesHeader.addEventListener('click', toggleSeries);
+      seriesHeader.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSeries(); } });
 
-      section.appendChild(sHeader);
-      section.appendChild(sBody);
-      body.appendChild(section);
+      seriesSection.appendChild(seriesHeader);
+      seriesSection.appendChild(seriesBody);
+      sagaBody.appendChild(seriesSection);
     }
 
-    sagaSection.appendChild(header);
-    sagaSection.appendChild(body);
+    sagaSection.appendChild(sagaHeader);
+    sagaSection.appendChild(sagaBody);
     container.appendChild(sagaSection);
   }
 }
 
-/* ========= expand/collapse helpers used by main.js ========= */
-export function setAllSagasCollapsed(collapsed){
+/* ── Collapse/expand helpers ────────────────────────────── */
+export function setAllSagasCollapsed(collapsed) {
   const all = allSagaNamesFromBooks(books);
   if (collapsed) { for (const s of all) collapsedSagas.add(s); }
   else           { for (const s of all) collapsedSagas.delete(s); }
   saveJSON(LS_KEYS.COLLAPSED_SAGAS, [...collapsedSagas]);
 }
 
-export function setAllSeriesCollapsed(collapsed){
+export function setAllSeriesCollapsed(collapsed) {
   const all = allSeriesKeysFromBooks(books);
   if (collapsed) { for (const k of all) collapsedSeries.add(k); }
   else           { for (const k of all) collapsedSeries.delete(k); }
